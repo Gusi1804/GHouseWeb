@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Producto</title>
+
+    <!-- Required meta tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <!-- <script type="module" src="/index.js"></script> -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore-compat.js"></script>
+
+    <!-- Popperjs -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js" integrity="sha384-eMNCOe7tC1doHpGoWe/6oMVemdAVTMs2xqW4mwXrXsW0L84Iytr2wi5v2QjrP/xp" crossorigin="anonymous"></script>
+
+    <!-- firebase credentials -->
+    <script>
+        const firebaseApp = firebase.initializeApp({
+            apiKey: "AIzaSyAIrKeHpTwUQLLJipXFnwyI0q7gXYtnZgc",
+            authDomain: "g-house-bf144.firebaseapp.com",
+            databaseURL: "https://g-house-bf144.firebaseio.com",
+            projectId: "g-house-bf144",
+            storageBucket: "g-house-bf144.appspot.com",
+            messagingSenderId: "467660754087",
+            appId: "1:467660754087:web:dcd9d6326a6b3bb1fddf82"
+        });
+    </script>
+</head>
+<body>
+
+    <p id="prodID" hidden>Loading...</p>
+
+    <script>
+        var qd = {};
+        if (location.search) location.search.substr(1).split("&").forEach(function(item) {
+            var s = item.split("="),
+                k = s[0],
+                v = s[1] && decodeURIComponent(s[1]); //  null-coalescing / short-circuit
+            //(k in qd) ? qd[k].push(v) : qd[k] = [v]
+            (qd[k] = qd[k] || []).push(v) // null-coalescing / short-circuit
+        })
+
+        document.getElementById("prodID").innerText = qd.id;
+
+        let id = document.getElementById("prodID").innerText;
+
+        document.title = qd.id;
+
+        var item = undefined;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            //const loadEl = document.querySelector('#load');
+
+            var db = firebase.firestore();
+
+            var docRef = db.collection("items").doc(id);
+
+            docRef.get().then((doc) => {
+                if (doc.exists) {
+                    console.log("Document data:", doc.data());
+
+                    item = doc.data()
+
+                    const nombre = item.nombre;
+                    const contenido = item.contenido;
+                    const categoría = item.categoría;
+                    const barcode = item.barcode;
+                    const expiryDateAlert = Number(item.cadAlert);
+                    const quantityAlert = Number(item.cantAlert);
+
+                    document.title = nombre + " " + contenido;
+                    document.getElementById("título").innerText = nombre + " " + contenido;
+
+                    //nombre
+                    document.getElementById("nombre").value = nombre;
+                    document.getElementById("nombre").removeAttribute("disabled");
+
+                    //contenido
+                    document.getElementById("contenido").value = contenido;
+                    document.getElementById("contenido").removeAttribute("disabled");
+
+                    //categoría
+                    document.getElementById("categoría").value = categoría;
+                    document.getElementById("categoría").removeAttribute("disabled");
+
+                    //barcode
+                    document.getElementById("barcode").value = barcode;
+                    document.getElementById("barcode").removeAttribute("disabled");
+
+                    //cantAlert
+                    document.getElementById("cant_alert").value = quantityAlert;
+                    document.getElementById("cant_alert").removeAttribute("disabled");
+
+                    //cadAlert
+                    document.getElementById("cad_alert").value = expiryDateAlert;
+                    document.getElementById("cad_alert").removeAttribute("disabled");
+
+                    var tableVariedades = `<table style="width:100%" class="table table-striped"><thead><tr><th>Cantidad</th><th>Abierto</th><th>Caducidad</th><th>Estatus</th></tr></thead><tbody>`;
+
+                    item.variedades.forEach(function (variedad) {
+                        console.log(variedad)
+                        const idVar = "a" + variedad.id;
+                        const open = variedad.open;
+
+                        var openStr = "";
+
+                        if (open == true) {
+                            openStr = 'Abierto';
+                        } else {
+                            openStr = 'Cerrado';
+                        }
+                        const cantidad = variedad.cantidad;
+                        const caducidad = variedad.caducidadFB;
+
+                        var status = "";
+
+                        var row = ""
+
+                        var cad_string_button = "N/A"
+
+                        if (caducidad === undefined) { //La variedad no tiene caducidad
+                            // se ejecutan estas instrucciones
+                            row = `<tr id=${idVar}><td>${cantidad}</td><td>${openStr}</td><td>N/A</td>`;
+
+                            // status
+                            if (open) {
+                                status = "teal";
+                            } else if (!open) {
+                                status = "green";
+                            }
+                        }
+                        else {
+                            // estas instrucciones no se ejecutan
+                            const options = { weekday: undefined, year: 'numeric', month: 'numeric', day: 'numeric' };
+                            const caducidadStr = caducidad.toDate().toLocaleDateString(undefined, options);
+
+                            //cad_string_button = caducidad.toDate().toISOString().substring(0,10);
+                            //FORMAT DAY FOR EDIT VARIETY MODAL
+                            const getTwoDigits = (value) => value < 10 ? `0${value}` : value;
+
+                            const formatDate = (date) => {
+                                const day = getTwoDigits(date.getDate());
+                                const month = getTwoDigits(date.getMonth() + 1); // add 1 since getMonth returns 0-11 for the months
+                                const year = date.getFullYear();
+
+                                return `${year}-${month}-${day}`;
+                            }
+
+                            cad_string_button = formatDate(caducidad.toDate());
+                            //END
+
+
+
+                            row = `<tr id=${idVar}><td>${cantidad}</td><td>${openStr}</td><td>${caducidadStr}</td>`;
+
+                            const today = Date.now();
+
+                            let time_diff = caducidad.toMillis() - today;
+                            let days = time_diff / (1000 * 3600 * 24);
+
+                            console.log(nombre + ", días restantes: " + days)
+
+                            if (days === undefined) {} else {
+                                if (caducidad.toMillis() < today) { // expired items, funciona
+                                    status = "red";
+                                } else {
+                                    if (expiryDateAlert === undefined) {} else {
+                                        if (days < expiryDateAlert) { // about to expire
+                                            status = "orange";
+                                        } else if (open) { // open
+                                            status = "teal";
+                                        } else { // perfect
+                                            status = "green";
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        var estado_label = "";
+
+                        switch (status) {
+                            case "red":
+                                estado_label = `<td><span class="badge rounded-pill bg-danger">Caducado</span></td>`;
+                                break;
+                            case "orange":
+                                estado_label = `<td><span class="badge rounded-pill bg-warning text-dark">Por caducar</span></td>`;
+                                break;
+                            case "teal":
+                                estado_label = `<td><span class="badge rounded-pill bg-info text-dark">Abierto</span></td>`;
+                                break;
+                            case "green":
+                                estado_label = `<td><span class="badge rounded-pill bg-success">Cerrado</span></td>`;
+                                break;
+                        }
+
+                        //const cad_string_button = caducidad.toDate().getTime();
+                        const edit_button = `<td><button type="button" class="btn btn-dark" data-bs-toggle="modal" data-bs-target="#variantModal" id_var="${variedad.id}" cantidad="${cantidad}" abierto="${open}" caducidad="${cad_string_button}">Editar</button>`;
+                        const del_button = `<button type="button" class="btn btn-danger" onclick="borrarVariante(this, '${variedad.id}')">Eliminar</button></td></tr>`;
+
+                        tableVariedades += row + estado_label + edit_button + del_button;
+                    });
+                    tableVariedades += "</tbody></table>";
+
+                    document.getElementById("variedades").innerHTML = tableVariedades;
+                } else {
+                    // doc.data() will be undefined in this case
+                    console.log("No such document!");
+                }
+            }).catch((error) => {
+                console.log("Error getting document:", error);
+            });
+
+
+        });
+
+        function guardar() {
+            const nombre = document.getElementById("nombre").value;
+            const contenido = document.getElementById("contenido").value;
+            const categoría = document.getElementById("categoría").value;
+            const barcode = document.getElementById("barcode").value;
+            const expiryDateAlert = Number(document.getElementById("cad_alert").value);
+            const quantityAlert = Number(document.getElementById("cant_alert").value);
+
+            var db = firebase.firestore();
+
+            var ref = db.collection("items").doc(id);
+
+            // Guardar datos básicos
+            return ref.update({
+                nombre: nombre,
+                contenido: contenido,
+                categoría: categoría,
+                barcode: barcode,
+                cadAlert: expiryDateAlert,
+                cantAlert: quantityAlert
+            })
+                .then(() => {
+                    console.log("Document successfully updated!");
+                    location.reload();
+                })
+                .catch((error) => {
+                    // The document probably doesn't exist.
+                    console.error("Error updating document: ", error);
+                });
+        }
+
+        function guardarVariante() {
+            const var_id = document.getElementById("id_var_hidden").value;
+            const cant = document.getElementById("quantity").value;
+            const open = document.getElementById("open").checked;
+            const caducidad = document.getElementById("caducidad").value;
+            var cad_date = new Date(caducidad);
+
+            //console.log(cad_date.getDate())
+            //console.log(cad_date.getUTCDate())
+
+            //const hours = new Date().getHours();
+            const date = cad_date.getUTCDate();
+
+            cad_date.setHours(0);
+            cad_date.setDate(date)
+
+            const cad_timestamp = firebase.firestore.Timestamp.fromDate(cad_date);
+
+            var db = firebase.firestore();
+
+            var ref = db.collection("items").doc(id);
+
+            // get official varieties
+            ref.get().then((doc) => {
+                if (doc.exists) {
+                    doc.data().variedades.forEach(function (variedad) {
+                        if (variedad.id == var_id) {
+                            return ref.update({
+                                variedades: firebase.firestore.FieldValue.arrayRemove(variedad)
+                            })
+                                .then(() => {
+                                    console.log("Old variety deleted");
+
+                                    const variedades = item.variedades;
+                                    const var_filtered = variedades.filter(variedad => variedad.id != var_id);
+                                    console.log(var_filtered)
+
+                                    console.log("var_id: " + var_id)
+                                    const old_var_arr = variedades.filter(variedad => variedad.id == var_id);
+                                    const old_var = old_var_arr[0];
+                                    console.log("old_var:")
+                                    console.log(old_var)
+
+                                    var new_var = old_var_arr[0];
+                                    new_var.cantidad = cant;
+                                    new_var.open = Boolean(open);
+
+                                    if (document.getElementById("caducidad").getAttribute("hidden") != true) {
+                                        new_var.caducidadFB = cad_timestamp
+                                    }
+
+                                    return ref.update({
+                                        variedades: firebase.firestore.FieldValue.arrayUnion(new_var)
+                                    })
+                                        .then(() => {
+                                            console.log("New variety added!");
+                                            location.reload();
+                                        })
+                                        .catch((error) => {
+                                            // The document probably doesn't exist.
+                                            console.error("Error updating document: ", error);
+                                        });
+
+                                })
+                                .catch((error) => {
+                                    // The document probably doesn't exist.
+                                    console.error("Error updating document: ", error);
+                                });
+                        }
+                    })
+                }
+            })
+
+            /*
+            const variedades = item.variedades;
+            console.log("variedades:")
+            console.log(variedades)
+
+            const var_filtered = variedades.filter(variedad => variedad.id != var_id);
+            console.log(var_filtered)
+
+            console.log("var_id: " + var_id)
+            const old_var_arr = variedades.filter(variedad => variedad.id == var_id);
+            const old_var = old_var_arr[0];
+            console.log("old_var:")
+            console.log(old_var)
+
+
+
+            var new_var = old_var_arr[0];
+            new_var.cantidad = cant;
+            new_var.open = Boolean(open);
+            new_var.caducidadFB = cad_timestamp
+
+            console.log("Old:");
+            console.log(old_var);
+
+            console.log("New:");
+            console.log(new_var);
+            //console.log("caducidad local: " + caducidad);
+
+            var varieties_updated = [];
+
+            varieties_updated = var_filtered.push(new_var);
+            console.log("updated varieties:")
+            console.log(varieties_updated)
+
+             */
+
+
+        }
+
+        function borrarVariante(variante, var_id) {
+            var db = firebase.firestore();
+
+            var ref = db.collection("items").doc(id);
+
+            ref.get().then((doc) => {
+                if (doc.exists) {
+                    doc.data().variedades.forEach(function (variedad) {
+                        if (variedad.id == var_id) {
+                            return ref.update({
+                                variedades: firebase.firestore.FieldValue.arrayRemove(variedad)
+                            })
+                                .then(() => {
+                                    console.log("Variedad borrada");
+                                    location.reload();
+                                })
+                                .catch((error) => {
+                                    // The document probably doesn't exist.
+                                    console.error("Error updating document: ", error);
+                                });
+                        }
+                    })
+                }
+            })
+        }
+    </script>
+
+    <div class="container-sm py-5">
+        <main>
+            <h1 id="título">Cargando...</h1>
+
+            <button type="button" class="btn btn-success" onclick="guardar()">Guardar</button>
+
+            <table class="table">
+                <tbody>
+                    <tr>
+                        <th scope="row">Nombre</th>
+                        <td><input type="text" class="form-control" id="nombre" value="Cargando..." disabled></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Contenido</th>
+                        <td><input type="text" class="form-control" id="contenido" value="Cargando..." disabled></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Categoría</th>
+                        <td><input type="text" class="form-control" id="categoría" value="Cargando..." disabled></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Código de Barras</th>
+                        <td><input type="text" class="form-control" id="barcode" value="Cargando..." disabled></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Cantidad de Alerta</th>
+                        <td><input type="number" class="form-control" id="cant_alert" value="Cargando..." disabled></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Días de Alerta</th>
+                        <td><input type="number" class="form-control" id="cad_alert" value="Cargando..." disabled></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div id="variedades"></div>
+
+
+
+            <!-- Real modal (not working) -->
+
+            <div class="modal fade" id="variantModal" tabindex="-1" aria-labelledby="variantModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="variantModalLabel">Modificar Variante</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                <div class="mb-3" hidden>
+                                    <label for="id_var_hidden" class="col-form-label">ID:</label>
+                                    <input type="text" class="form-control" id="id_var_hidden">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="quantity" class="col-form-label">Cantidad:</label>
+                                    <input type="number" class="form-control" id="quantity">
+                                </div>
+                                <div class="form-check form-switch">
+                                    <label class="form-check-label" for="open">Abierto</label>
+                                    <input class="form-check-input" type="checkbox" role="switch" id="open" checked>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="caducidad" class="col-form-label">Caducidad:</label>
+                                    <input type="date" class="form-control" id="caducidad" min="2019-01-01" max="2030-12-31">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                            <button type="button" class="btn btn-primary" onclick="guardarVariante()">Guardar Cambios</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#variantModal" id_var="hasbiabda89" cantidad="2" abierto="false" caducidad="2021-12-14">Open modal</button>
+
+            <script>
+                var modal = document.getElementById('variantModal')
+                modal.addEventListener('show.bs.modal', function (event) {
+                    // Button that triggered the modal
+                    var button = event.relatedTarget
+                    // Extract info from data-bs-* attributes
+                    var id = button.getAttribute('id_var')
+                    var quantity = button.getAttribute('cantidad')
+                    var abierto = button.getAttribute('abierto')
+                    var caducidad = button.getAttribute('caducidad')
+
+                    // If necessary, you could initiate an AJAX request here
+                    // and then do the updating in a callback.
+                    //
+                    // Update the modal's content.
+                    var modalTitle = variantModal.querySelector('.modal-title')
+                    var quantityField = document.getElementById("quantity");
+                    var openField = document.getElementById("open");
+                    var caducidadField = document.getElementById("caducidad");
+                    var idField = document.getElementById("id_var_hidden");
+
+                    modalTitle.textContent = 'Modificar Variante'
+                    quantityField.value = Number(quantity)
+
+                    if (abierto == "false") {
+                        openField.checked = false;
+                    } else if (abierto == "true") {
+                        openField.checked = true;
+                    }
+
+                    if (caducidad != "N/A") {
+                        /*
+                        let msec = Date.parse(caducidad);
+                        const d = new Date(msec);
+
+                        console.log(d)
+
+                        caducidadField.valueAsDate = d;
+
+                         */
+
+                        caducidadField.value = caducidad;
+                    } else {
+                        caducidadField.hidden = true;
+                    }
+
+                    idField.value = id
+                })
+            </script>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+</body>
+</html>

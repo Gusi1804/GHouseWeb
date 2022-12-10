@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reembolsos</title>
+
+    <!-- Required meta tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <!-- update the version number as needed -->
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        const firebaseApp = firebase.initializeApp({
+            apiKey: "AIzaSyAIrKeHpTwUQLLJipXFnwyI0q7gXYtnZgc",
+            authDomain: "g-house-bf144.firebaseapp.com",
+            databaseURL: "https://g-house-bf144.firebaseio.com",
+            projectId: "g-house-bf144",
+            storageBucket: "g-house-bf144.appspot.com",
+            messagingSenderId: "467660754087",
+            appId: "1:467660754087:web:dcd9d6326a6b3bb1fddf82"
+        });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+
+    <style>
+        .table-fixed tbody {
+            height: 500px;
+            overflow-y: auto;
+
+        }
+
+        .table-fixed thead,
+        .table-fixed tbody,
+        .table-fixed tr,
+        .table-fixed td,
+        .table-fixed th {
+            display: block;
+        }
+
+        .table-fixed tbody td,
+        .table-fixed tbody th,
+        .table-fixed thead > tr > th {
+            float: left;
+            position: relative;
+
+            &::after {
+                 content: '';
+                 clear: both;
+                 display: block;
+             }
+        }
+    </style>
+
+</head>
+<body>
+    <div class="container-sm py-5 text-center align-items-center  justify-content-center">
+        <main>
+            <h1 class="pb-4">Reembolsos</h1>
+
+            <!-- Loading spinner -->
+            <div class="container align-items-center text-center" id="spinner">
+                <strong>Cargando...</strong><br><br>
+                <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+            </div>
+
+            <div id="logged_in" style="display: none" class="table-responsive">
+                <div id="show_email" class="pb-4"></div>
+
+                <!-- Todos los reembolsos -->
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm" id="reembolsos_table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Asunto</th>
+                                <th scope="col">Persona</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Siniestro</th>
+                                <th scope="col">Importe reclamado (real)</th>
+                                <th scope="col">Importe reclamado (MetLife)</th>
+                                <th scope="col">Importe no pagado (MetLife)</th>
+                                <th scope="col">Importe no pagado (real)</th> <!-- calculado -->
+                                <th scope="col">Subtotal</th> <!-- calculado -->
+                                <th scope="col">Deducible</th>
+                                <th scope="col">Coaseguro</th>
+                                <th scope="col">Importe del pago</th> <!-- calculado -->
+                                <th scope="col">Pagado?</th>
+                                <th scope="col" style="min-width: 15em; max-height: 10em">Conceptos no pagados (MetLife)</th>
+                                <th scope="col" style="min-width: 15em; max-height: 10em">Conceptos no pagados (real)</th>
+                                <!-- <th scope="col">Ver Reembolso</th> -->
+                            </tr>
+                        </thead>
+
+                        <tbody id="reembolsos_table_body"></tbody>
+
+                        <tbody id="totales"></tbody>
+                    </table>
+                </div>
+
+                <!-- Cerrar sesión -->
+                <div class="container">
+                    <button type="button" class="btn btn-primary mb-3" onclick="nuevo_r()">Nuevo Reembolso</button>
+                    <button type="button" class="btn btn-secondary mb-3" onclick="logout()">Cerrar Sesión</button>
+                </div>
+            </div>
+
+            <div class="error" id="error_box"></div>
+
+            <div class="container text-center align-items-center justify-content-center" id="login-form" style="display: none">
+
+                <form onsubmit="login()" action="javascript:void(0);">
+                    <div class="row">
+                        <div class="col-5">
+                            <input type="email" class="form-control" id="email" placeholder="Email">
+                        </div>
+                        <div class="col-5">
+                            <input type="password" class="form-control" id="password" placeholder="Contraseña">
+                        </div>
+                        <div class="col-sm">
+                            <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                        </div>
+                    </div>
+                </form>
+                <div class="col-12" id="captcha_container"></div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLogInStatus();
+        });
+
+        var codeEntered = false;
+
+        function login() {
+            var email = document.getElementById("email").value;
+            var password = document.getElementById("password").value;
+
+            const auth = firebaseApp.auth();
+
+            /*
+            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+                .then(() => {
+                    // Existing and future Auth states are now persisted in the current
+                    // session only. Closing the window would clear any existing state even
+                    // if a user forgets to sign out.
+                    // ...
+                    // New sign-in will be persisted with session persistence.
+                    //return auth.signInWithEmailAndPassword(email, password);
+
+                })
+                .catch((error) => {
+                    // Handle Errors here.
+                    var errorCode = error.code;
+                    var errorMessage = error.message;
+
+                    document.getElementById("error_box").innerText = errorMessage;
+                });
+             */
+
+            var resolver;
+            var verification_id_global;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(function(userCredential) {
+                    // User is not enrolled with a second factor and is successfully signed in.
+                    // ...
+                    checkLogInStatus();
+                })
+                .catch(function(error) {
+                    if (error.code == 'auth/multi-factor-auth-required') {
+                        resolver = error.resolver;
+                        // Ask user which second factor to use.
+                        console.log(resolver.hints);
+                        if (resolver.hints[0].factorId ===
+                            firebase.auth.PhoneMultiFactorGenerator.FACTOR_ID) {
+                            var phoneInfoOptions = {
+                                multiFactorHint: resolver.hints[0],
+                                session: resolver.session
+                            };
+                            var phoneAuthProvider = new firebase.auth.PhoneAuthProvider();
+
+                            const container = document.getElementById("captcha_container");
+                            var recaptchaVerifier = new firebase.auth.RecaptchaVerifier(container);
+
+                            // Send SMS verification code
+                            return phoneAuthProvider.verifyPhoneNumber(phoneInfoOptions, recaptchaVerifier)
+                                .then(async function (verificationId) {
+                                    // Ask user for the SMS verification code.
+                                    verification_id_global = verificationId;
+                                    const field = document.createElement("div");
+                                    field.innerHTML = `
+                                    <form onsubmit="smsCodeEntered()" action="javascript:void(0);">
+                                        <div class="row pt-5">
+                                            <div class="col-4">
+                                                <input type="number" class="form-control" id="smsVerCode" placeholder="Código de Verificación SMS">
+                                            </div>
+                                            <div class="col-2">
+                                                <button type="submit" class="btn btn-primary">Verificar</button>
+                                            </div>
+                                        </div>
+                                    </form>`;
+                                    container.innerHTML = "";
+                                    container.append(field);
+
+
+                                    await until(_ => codeEntered == true);
+
+                                    const verificationCode = document.getElementById("smsVerCode").value;
+                                    var cred = firebase.auth.PhoneAuthProvider.credential(
+                                        verificationId, verificationCode);
+                                    var multiFactorAssertion =
+                                        firebase.auth.PhoneMultiFactorGenerator.assertion(cred);
+                                    // Complete sign-in.
+                                    return resolver.resolveSignIn(multiFactorAssertion);
+                                })
+                                .then(function(userCredential) {
+                                    // User successfully signed in with the second factor phone number.
+                                    console.log(userCredential);
+                                });
+                        } else {
+                            // Unsupported second factor.
+                        }
+                    } else if (error.code == 'auth/wrong-password') {
+                        // Handle other errors such as wrong password.
+                        alert("Contraseña incorrecta, intenta de nuevo.");
+                    }
+                });
+
+            checkLogInStatus();
+        }
+
+        function smsCodeEntered() {
+            codeEntered = true;
+        }
+
+        /*
+        function verify_mfa(el, verificationId) {
+            const verificationCode = document.getElementById("smsVerCode").value;
+
+            var cred = firebase.auth.PhoneAuthProvider.credential(
+                verificationId, verificationCode);
+            var multiFactorAssertion =
+                firebase.auth.PhoneMultiFactorGenerator.assertion(cred);
+            // Complete sign-in.
+            resolver.resolveSignIn(multiFactorAssertion)
+        }
+
+         */
+
+        function until(conditionFunction) {
+
+            const poll = resolve => {
+                if(conditionFunction()) resolve();
+                else setTimeout(_ => poll(resolve), 400);
+            }
+
+            return new Promise(poll);
+        }
+
+
+        function checkLogInStatus() {
+            const auth = firebaseApp.auth();
+
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // User is signed in, see docs for a list of available properties
+                    // https://firebase.google.com/docs/reference/js/firebase.User
+                    var email1 = user.email;
+
+                    const emailVerified = user.emailVerified;
+
+                    if (!emailVerified) {
+                        auth.currentUser.sendEmailVerification()
+                            .then(() => {
+                                // Email verification sent!
+                                // ...
+                                console.log("Email verification sent!")
+                            });
+                    }
+
+                    document.getElementById("show_email").innerText = "Bienvenido, " + email1;
+
+                    loadData();
+                    //show();
+
+                    // ...
+                } else {
+                    // User is signed out
+                    hide();
+                }
+            });
+        }
+
+        function show() {
+            // successful login
+            document.getElementById("login-form").style.display = "none";
+            document.getElementById("logged_in").style.display = "initial";
+            document.getElementById("error_box").style.display = "none";
+
+            document.getElementById("email").value = "";
+            document.getElementById("password").value = "";
+            document.getElementById("error_box").innerText = "";
+
+            document.getElementById("spinner").style.display = "none";
+        }
+
+        function hide() {
+            // successful logout
+            document.getElementById("login-form").style.display = "initial";
+            document.getElementById("logged_in").style.display = "none";
+            document.getElementById("error_box").style.display = "initial";
+            document.getElementById("spinner").style.display = "none";
+        }
+
+        function logout() {
+            firebase.auth().signOut();
+            location.reload();
+        }
+
+        function loadData() {
+            var db = firebaseApp.firestore();
+            /*
+            if (location.hostname === "localhost") {
+                db.useEmulator("localhost", 8080);
+            }
+
+             */
+            const auth = firebaseApp.auth();
+
+            //Varonil
+            var reembolsos = [];
+            var totales = {
+                reclamado_real: 0,
+                reclamado_met: 0,
+                no_pagado_met: 0,
+                no_pagado_real: 0,
+                subtotal: 0,
+                deducible: 0,
+                coaseguro: 0,
+                pago: 0
+            };
+
+            db.collection("reembolsos").orderBy("fecha")
+                .get()
+                .then((querySnapshot) => {
+                    querySnapshot.forEach((doc) => {
+                        // doc.data() is never undefined for query doc snapshots
+                        console.log(doc.id, " => ", doc.data());
+
+                        var r = doc.data();
+                        r.no_pagado_real = r.reclamado_real - r.reclamado_met + r.no_pagado_met;
+                        r.subtotal = r.reclamado_met - r.no_pagado_met;
+                        r.pago = r.reclamado_met - r.no_pagado_met - r.deducible - r.coaseguro;
+                        r.id = doc.id;
+
+                        totales.reclamado_real += r.reclamado_real;
+                        totales.reclamado_met += r.reclamado_met;
+                        totales.no_pagado_met += r.no_pagado_met;
+                        totales.no_pagado_real += r.no_pagado_real;
+                        totales.subtotal += r.subtotal;
+                        totales.deducible += r.deducible;
+                        totales.coaseguro += r.coaseguro;
+                        if (r.pagado) {
+                            totales.pago += r.pago;
+                        } else {
+                            r.pago = 0;
+                        }
+
+                        reembolsos.push(r);
+                    });
+
+                    var i = 1;
+
+                    //Currency formatter
+                    const options = { style: 'currency', currency: 'MXN' };
+                    const formatter = new Intl.NumberFormat('es-MX', options);
+
+                    //Creating table rows for each reimbursement
+                    const tbody = document.getElementById("reembolsos_table_body");
+                    while (tbody.hasChildNodes()) {
+                        tbody.removeChild(tbody.firstChild);
+                    }
+
+                    reembolsos.forEach(function(r) {
+                        //r.posicion = i;
+
+                        let r_row = document.createElement("tr");
+
+                        let asunto = document.createElement("th");
+                        //asunto.innerText = r.asunto;
+                        let button_div = document.createElement("div");
+                        const r_name = `${r.asunto} – ${r.persona}`;
+                        const item_link = `detail/index.html?id=${r.id}&nombre=${r_name}`;
+                        //button_div.innerHTML = `${r.asunto}<br><button type="button" class="btn btn-outline-dark btn-sm" onClick="window.open('${item_link}')"><i class="bi bi-arrow-up-right-square"></i></button>`;
+                        button_div.innerHTML = `${r.asunto}<br><button type="button" class="btn btn-outline-dark btn-sm" onClick="window.open('${item_link}')" style="padding: 10; border: none;"><i class="bi bi-box-arrow-up-right"></i></button>`;
+                        asunto.append(button_div);
+                        asunto.scope = "row";
+
+
+                        let persona = document.createElement("td");
+                        persona.innerText = r.persona;
+
+                        let fecha = document.createElement("td");
+                        fecha.innerText = r.fecha.toDate().toLocaleDateString(); //falta convertir timestamp a fecha
+
+                        let siniestro = document.createElement("td");
+                        siniestro.innerText = r.siniestro;
+
+                        let reclamado_real = document.createElement("td");
+                        reclamado_real.innerText = formatter.format(r.reclamado_real);
+
+                        let reclamado_met = document.createElement("td");
+                        reclamado_met.innerText = formatter.format(r.reclamado_met);
+
+                        let no_pagado_met = document.createElement("td");
+                        no_pagado_met.innerText = formatter.format(r.no_pagado_met);
+
+                        let no_pagado_real = document.createElement("td");
+                        no_pagado_real.innerText = formatter.format(r.no_pagado_real);
+
+                        let subtotal = document.createElement("td");
+                        subtotal.innerText = formatter.format(r.subtotal);
+
+                        let deducible = document.createElement("td");
+                        deducible.innerText = formatter.format(r.deducible);
+
+                        let coaseguro = document.createElement("td");
+                        coaseguro.innerText = formatter.format(r.coaseguro);
+
+                        let pago = document.createElement("td");
+                        pago.innerText = formatter.format(r.pago);
+
+                        let pagado = document.createElement("td");
+                        var pagado_text = "✅";
+                        if (r.pagado == false) {
+                            pagado_text = "❌";
+                        }
+                        pagado.innerText = pagado_text;
+
+                        let unpaid_items_met = document.createElement("td");
+                        unpaid_items_met.style.maxHeight = "10em";
+                        unpaid_items_met.style.height = "10em";
+                        unpaid_items_met.className = "h-25";
+                        //style="min-width: 15em; max-height: 10em"
+                        let up_met_sm = document.createElement("small");
+                        up_met_sm.innerText = r.unpaid_items_met;
+                        up_met_sm.className = "lh-1";
+                        unpaid_items_met.append(up_met_sm);
+                        //unpaid_items_met.setAttribute("colspan", "4");
+
+                        let unpaid_items_real = document.createElement("td");
+                        unpaid_items_real.style.maxHeight = "10em";
+                        unpaid_items_real.style.height = "10em";
+                        unpaid_items_real.className = "h-25";
+                        let up_real_sm = document.createElement("small");
+                        up_real_sm.innerText = r.unpaid_items_real;
+                        up_real_sm.className = "lh-1";
+                        unpaid_items_real.append(up_real_sm);
+                        //unpaid_items_real.setAttribute("colspan", "2");
+
+                        const button_row = document.createElement("td");
+                        const button = document.createElement("div");
+                        //button.type="button";
+                        //button.value = "Ver";
+                        //button.onclick = `window.open('${item_link}')`;
+                        //button.style = "btn btn-dark";
+                        button.innerHTML = `<input type="button" value="Ver" onclick="window.open('${item_link}')" class="btn btn-dark"/>`;
+                        button_row.append(button)
+
+                        r_row.append(asunto, persona, fecha, siniestro, reclamado_real, reclamado_met, no_pagado_met, no_pagado_real, subtotal, deducible, coaseguro, pago, pagado, unpaid_items_met, unpaid_items_real);
+
+                        tbody.append(r_row);
+
+                        i++;
+                    });
+
+                    //Totals table row
+                    function totals_row() {
+                        let r_row = document.createElement("tr");
+
+                        let asunto = document.createElement("th");
+                        asunto.innerText = reembolsos.length;
+                        asunto.scope = "row";
+
+                        let persona = document.createElement("td");
+                        persona.innerText = "";
+
+                        let fecha = document.createElement("td");
+                        fecha.innerText = "";
+
+                        let siniestro = document.createElement("td");
+                        siniestro.innerText = "";
+
+                        let reclamado_real = document.createElement("th");
+                        reclamado_real.innerText = formatter.format(totales.reclamado_real);
+
+                        let reclamado_met = document.createElement("th");
+                        reclamado_met.innerText = formatter.format(totales.reclamado_met);
+
+                        let no_pagado_met = document.createElement("th");
+                        no_pagado_met.innerText = formatter.format(totales.no_pagado_met);
+
+                        let no_pagado_real = document.createElement("th");
+                        no_pagado_real.innerText = formatter.format(totales.no_pagado_real);
+
+                        let subtotal = document.createElement("th");
+                        subtotal.innerText = formatter.format(totales.subtotal);
+
+                        let deducible = document.createElement("th");
+                        deducible.innerText = formatter.format(totales.deducible);
+
+                        let coaseguro = document.createElement("th");
+                        coaseguro.innerText = formatter.format(totales.coaseguro);
+
+                        let pago = document.createElement("th");
+                        pago.innerText = formatter.format(totales.pago);
+
+                        let pagado = document.createElement("td");
+                        pagado.innerText = "";
+
+                        let unpaid_items_met = document.createElement("td");
+                        unpaid_items_met.innerText = "";
+
+                        let unpaid_items_real = document.createElement("td");
+                        unpaid_items_real.innerText = "";
+
+                        const button = document.createElement("div");
+
+                        r_row.append(asunto, persona, fecha, siniestro, reclamado_real, reclamado_met, no_pagado_met, no_pagado_real, subtotal, deducible, coaseguro, pago, pagado, unpaid_items_met, unpaid_items_real);
+
+                        const totals_tbody = document.getElementById("totales");
+                        while (totals_tbody.hasChildNodes()) {
+                            totals_tbody.removeChild(totals_tbody.firstChild);
+                        }
+                        totals_tbody.append(r_row);
+                    };
+
+                    totals_row();
+
+                    show();
+                })
+                .catch((error) => {
+                    console.log("Error getting documents: ", error);
+                });
+        }
+
+        //Nuevo Reembolso
+        function nuevo_r() {
+            var db = firebaseApp.firestore();
+
+            db.collection("reembolsos").add({
+                asunto: "new",
+            })
+                .then((docRef) => {
+                    console.log("Document written with ID: ", docRef.id);
+
+                    const item_link = `detail/index.html?id=${docRef.id}&nombre="new"`;
+                    window.open(item_link);
+                })
+                .catch((error) => {
+                    console.error("Error adding document: ", error);
+                });
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AnalysisUIOptions">
+    <option name="SCOPE_TYPE" value="3" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="ced7bc21-8bcc-4f54-978a-354c10e4d3d2" name="Default Changelist" comment="Initial commit" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JavaScript File" />
+        <option value="HTML File" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Rebase.Settings">
+    <option name="NEW_BASE" value="main" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="main-okay" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="1ubHL2MyuNMRnwh1N0kiDM1Pfwq" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/gustavogarfias/Documents/GHouseWeb/public/reembolsos/detail&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;org.jetbrains.plugins.github.ui.GithubSettingsConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/public/reembolsos/detail" />
+      <recent name="$PROJECT_DIR$/public/reembolsos/detail/editar-estudio" />
+      <recent name="$PROJECT_DIR$/public/reembolsos" />
+      <recent name="$PROJECT_DIR$/public/sofi/february" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$USER_HOME$/Downloads" />
+      <recent name="$PROJECT_DIR$/public/reembolsos/detail" />
+      <recent name="$PROJECT_DIR$/public/ethics-bowl" />
+      <recent name="$PROJECT_DIR$/public/sofi/february/13" />
+      <recent name="$PROJECT_DIR$/public/sofi/february/12" />
+    </key>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="ced7bc21-8bcc-4f54-978a-354c10e4d3d2" name="Default Changelist" comment="" />
+      <created>1624927310302</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1624927310302</updated>
+      <workItem from="1624927311769" duration="6000" />
+      <workItem from="1624927331126" duration="14160000" />
+      <workItem from="1625436268167" duration="3051000" />
+      <workItem from="1627936286784" duration="11655000" />
+      <workItem from="1627963542873" duration="647000" />
+      <workItem from="1628005269101" duration="3722000" />
+      <workItem from="1632469213178" duration="1497000" />
+      <workItem from="1632470800816" duration="861000" />
+      <workItem from="1632715531565" duration="273000" />
+      <workItem from="1634656130818" duration="13261000" />
+      <workItem from="1634673785463" duration="598000" />
+      <workItem from="1635520552101" duration="14196000" />
+      <workItem from="1635693558927" duration="7334000" />
+      <workItem from="1639709371545" duration="6289000" />
+      <workItem from="1639717168184" duration="724000" />
+      <workItem from="1640318025967" duration="3053000" />
+      <workItem from="1640490280891" duration="787000" />
+      <workItem from="1643175856911" duration="7264000" />
+      <workItem from="1643259298671" duration="1034000" />
+      <workItem from="1643559402404" duration="29000" />
+      <workItem from="1643559457190" duration="2843000" />
+      <workItem from="1643771505398" duration="2000" />
+      <workItem from="1643782661358" duration="144000" />
+      <workItem from="1643937954377" duration="1215000" />
+      <workItem from="1644044537575" duration="1642000" />
+      <workItem from="1644210115725" duration="698000" />
+      <workItem from="1644296129609" duration="515000" />
+      <workItem from="1644415281385" duration="245000" />
+      <workItem from="1644499435792" duration="149000" />
+      <workItem from="1644585706594" duration="184000" />
+      <workItem from="1644697560047" duration="2011000" />
+      <workItem from="1649700139536" duration="7438000" />
+      <workItem from="1649707619100" duration="686000" />
+      <workItem from="1650675820151" duration="632000" />
+      <workItem from="1652916271441" duration="6324000" />
+      <workItem from="1652999030907" duration="22000" />
+      <workItem from="1653000525508" duration="7436000" />
+      <workItem from="1653025350228" duration="403000" />
+      <workItem from="1653339900310" duration="793000" />
+      <workItem from="1653411460209" duration="739000" />
+      <workItem from="1658969803090" duration="35313000" />
+      <workItem from="1659194162645" duration="34307000" />
+      <workItem from="1660847003569" duration="15874000" />
+      <workItem from="1661023960466" duration="599000" />
+      <workItem from="1661192887013" duration="9850000" />
+      <workItem from="1661544629499" duration="1862000" />
+      <workItem from="1662484855462" duration="1315000" />
+      <workItem from="1662596662521" duration="1280000" />
+      <workItem from="1663555959933" duration="3276000" />
+      <workItem from="1663708266319" duration="2465000" />
+      <workItem from="1664469214015" duration="2815000" />
+      <workItem from="1665013534583" duration="2459000" />
+      <workItem from="1665146678397" duration="3424000" />
+      <workItem from="1666748070147" duration="9000" />
+      <workItem from="1670687298884" duration="16073000" />
+    </task>
+    <task id="LOCAL-00001" summary="Initial commit">
+      <created>1670713016837</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1670713016837</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Initial commit">
+      <created>1670713231384</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1670713231384</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Added entregable property to files">
+      <created>1670713729277</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1670713729277</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Added entregable property to files">
+      <created>1670714248243</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1670714248243</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Initial commit">
+      <created>1670715284171</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1670715284171</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Added entregable property to files" />
+    <MESSAGE value="Initial commit" />
+    <option name="LAST_COMMIT_MESSAGE" value="Initial commit" />
+  </component>
+</project>

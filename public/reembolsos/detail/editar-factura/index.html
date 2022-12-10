@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Factura</title>
+
+    <!-- Required meta tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <!-- update the version number as needed -->
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-storage-compat.js"></script>
+
+    <script>
+        const firebaseApp = firebase.initializeApp({
+            apiKey: "AIzaSyAIrKeHpTwUQLLJipXFnwyI0q7gXYtnZgc",
+            authDomain: "g-house-bf144.firebaseapp.com",
+            databaseURL: "https://g-house-bf144.firebaseio.com",
+            projectId: "g-house-bf144",
+            storageBucket: "g-house-bf144.appspot.com",
+            messagingSenderId: "467660754087",
+            appId: "1:467660754087:web:dcd9d6326a6b3bb1fddf82"
+        });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container py-5  align-items-center  justify-content-center">
+        <main>
+            <div class="container text-center">
+                <h1 class="pb-4" id="title">Factura</h1>
+                <div id="show_email" class="pb-4"></div>
+
+                <p id="f_id" style="display: none"></p>
+            </div>
+
+            <!-- Loading spinner -->
+            <div class="container align-items-center text-center" id="spinner">
+                <strong>Cargando...</strong><br><br>
+                <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+            </div>
+
+            <!-- Main Content -->
+            <div id="main_content" style="visibility: hidden">
+                <form>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text">Folio</span>
+                        <input type="text" class="form-control" id="folio">
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text">Emisor</span>
+                        <!--
+                        <input type="text" class="form-control" id="emisor">
+                        -->
+                        <select class="form-select" aria-label="Default select example" id="emisor">
+                            <option value="otro">Otro</option>
+                            <option value="San Pablo" selected>San Pablo</option>
+                            <option value="Farmacia del Ahorro">Farmacia del Ahorro</option>
+                            <option value="Freestyle">Freestyle (Servicios Farmacéuticos Especializados)</option>
+                            <option value="Olarte y Akle">Olarte y Akle</option>
+                            <option value="Sanborn's">Sanborn's</option>
+                            <option value="Dra. Eugenia">Dra. Eugenia</option>
+                            <option value="Dra. Cervantes">Dra. Cervantes</option>
+                            <option value="Costco">Costco</option>
+                            <option value="Imagenus">Imagenus</option>
+                        </select>
+
+                        <input type="text" class="form-control" id="emisor_other" style="display: none">
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text">Concepto</span>
+                        <select class="form-select" aria-label="Default select example" id="concepto">
+                            <option value="Medicamentos">Medicamentos</option>
+                            <option value="Gastos Diversos">Gastos Diversos</option>
+                            <option value="Honorarios Médicos">Honorarios Médicos</option>
+                            <option value="Estudios">Estudios</option>
+                            <option value="Materiales">Materiales</option>
+                            <option value="Hospitalización">Hospitalización</option>
+                        </select>
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text">Monto Factura</span>
+                        <input type="currency" class="form-control" id="monto">
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text">Reembolsable</span>
+                        <input type="currency" class="form-control" id="reembolsable">
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text">Fecha</span>
+                        <input type="date" class="form-control" id="fecha" min="2010-01-01" max="2030-12-31">
+                    </div>
+                    <div class="mb-3 input-group">
+                        <span class="input-group-text">Notas</span>
+                        <!-- <input type="text" class="form-control" id="emisor"> -->
+                        <textarea class="form-control" id="notas" rows="5"></textarea>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="guardarFactura()">Actualizar Factura</button>
+                </form>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="myModalLabel">Guardando cambios...</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="myModalBody">
+                            <!-- Loading spinner -->
+                            <div class="container align-items-center text-center" id="saving_spinner">
+                                Por favor espere a que los cambios sean guardados.<br><br>
+                                <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer" style="display: none" id="myModalFooter">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        var qd = {};
+        if (location.search) location.search.substr(1).split("&").forEach(function(item) {
+            var s = item.split("="),
+                k = s[0],
+                v = s[1] && decodeURIComponent(s[1]); //  null-coalescing / short-circuit
+            //(k in qd) ? qd[k].push(v) : qd[k] = [v]
+            (qd[k] = qd[k] || []).push(v) // null-coalescing / short-circuit
+        })
+
+        let id = qd.id;
+
+        document.getElementById("f_id").innerText = id[0];
+
+        console.log(qd)
+        //document.getElementById("title").innerText = qd.nombre[0];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const auth = firebaseApp.auth();
+
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // User is signed in, see docs for a list of available properties
+                    // https://firebase.google.com/docs/reference/js/firebase.User
+                    var email1 = user.email;
+
+                    document.getElementById("show_email").innerText = "Bienvenido, " + email1;
+
+                    loadData();
+                    //show();
+
+                    // ...
+                } else {
+                    // User is signed out
+                    //hide();
+                }
+            });
+        });
+
+        var factura_og = new Object();
+
+        function loadData() {
+            var db = firebaseApp.firestore();
+
+            const options = { style: 'currency', currency: 'MXN' };
+            const formatter = new Intl.NumberFormat('es-MX', options);
+
+            console.log(id[0])
+
+            db.collection("facturas").doc(id[0]).get().then((doc) => {
+                if (doc.exists) {
+                    console.log("Document data:", doc.data());
+
+                    var f = doc.data();
+                    f.id = id[0];
+
+                    factura_og = f;
+
+                    document.getElementById("folio").value = f.id;
+
+                    switch (f.emisor) {
+                        case "San Pablo":
+                        case "Farmacia del Ahorro":
+                        case "Freestyle":
+                        case "Olarte y Akle":
+                        case "Sanborn's":
+                        case "Dra. Eugenia":
+                        case "Dra. Cervantes":
+                        case "Costco":
+                        case "Imagenus":
+                            document.getElementById("emisor").value = f.emisor;
+                            break;
+                        default:
+                            document.getElementById("emisor").value = "otro";
+                            document.getElementById("emisor_other").value = f.emisor;
+                            break;
+                    }
+
+                    document.getElementById("concepto").value = f.concepto;
+                    document.getElementById("monto").value = formatter.format(f.monto);
+                    document.getElementById("reembolsable").value = formatter.format(f.reembolsable);
+                    document.getElementById("fecha").value = f.fecha.toDate().toLocaleDateString('en-CA');
+                    document.getElementById("notas").value = f.notas;
+
+                    //Hide spinner & show main content
+                    document.getElementById("spinner").style.visibility = "hidden"
+                    document.getElementById("main_content").style.visibility = "visible";
+                } else {
+                    // doc.data() will be undefined in this case
+                    console.log("No such document!");
+                }
+            }).catch((error) => {
+                console.log("Error getting document:", error);
+            });
+        }
+
+        function descargarFactura(folio, file_type) {
+            // Create a root reference
+            var storageRef = firebase.storage().ref();
+
+            // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+            var ref = storageRef.child(`Reembolsos/Facturas/${folio}.${file_type}`);
+
+            ref.getDownloadURL()
+                .then((url) => {
+                    //console.log(url)
+
+                    //window.open(url, target="_blank");
+                    download([url]).then((el) => {
+                        var folio_og = document.getElementById("f_id").innerText;
+
+                        let t = `La factura que está siendo modificada tiene un archivo ${file_type} asociado. A continuación el archivo será descargado a su computadora. Asegúrese de guardarlo, ya que éste será eliminado permanentemente del almacenamiento en la nube.`;
+                        if (confirm(t) == true) {
+                            // Create a reference to the file to delete
+                            // Create a root reference
+                            var storageRef = firebase.storage().ref();
+
+                            // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+                            var ref = storageRef.child(`Reembolsos/Facturas/${folio_og}.${file_type}`);
+
+                            // Delete the file
+                            ref.delete().then(() => {
+                                // File deleted successfully
+                            }).catch((error) => {
+                                // Uh-oh, an error occurred!
+                            });
+                        } else {
+                            alert("La factura con el folio anterior no fue borrada.")
+                        }
+                    });
+                })
+                .catch((error) => {
+                    // Handle any errors
+                    console.log("Error downloading files...")
+                });
+        }
+
+        function guardarFactura() {
+            const myModal = new bootstrap.Modal(document.getElementById('myModal'), {})
+            myModal.show();
+
+            var folio_og = document.getElementById("f_id").innerText;
+            var folio = document.getElementById("folio").value.toUpperCase();
+
+            var emisor = document.getElementById("emisor").value;
+            if (emisor == "otro") {
+                emisor = document.getElementById("emisor_other").value;
+            }
+            const concepto = document.getElementById("concepto").value;
+            const monto = Number(document.getElementById("monto").value.replace('$', '').replace(',', ''));
+            const reembolsable = Number(document.getElementById("reembolsable").value.replace('$', '').replace(',', ''));
+            const fecha = new Date(document.getElementById("fecha").value);
+            const date = fecha.getUTCDate();
+            fecha.setHours(0);
+            fecha.setDate(date)
+            const fecha_timestamp = firebase.firestore.Timestamp.fromDate(fecha);
+            const notas = document.getElementById("notas").value;
+
+            // Add a new document in collection "facturas"
+
+
+            var db = firebaseApp.firestore();
+            /*
+            if (location.hostname === "localhost") {
+                db.useEmulator("localhost", 8080);
+            }
+
+             */
+            if (folio_og != folio) {
+                db.collection("facturas").doc(folio_og).delete().then(() => {
+                    console.log("Document successfully deleted!");
+
+                    if (factura_og.xml == true) {
+                        descargarFactura(folio_og, "xml");
+
+                        /*
+                        setTimeout(() => {
+                            let t = "Por favor confirme que el archivo xml de la facura haya sido descargado a su computadora. Una vez que confirme éste será elimindado permanentemente.";
+                            if (confirm(t) == true) {
+                                // Create a reference to the file to delete
+                                // Create a root reference
+                                var storageRef = firebase.storage().ref();
+
+                                // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+                                var ref = storageRef.child(`Reembolsos/Facturas/${folio_og}.xml`);
+
+                                // Delete the file
+                                ref.delete().then(() => {
+                                    // File deleted successfully
+                                }).catch((error) => {
+                                    // Uh-oh, an error occurred!
+                                });
+                            } else {
+                                alert("La factura con el folio anterior no fue borrada.")
+                            }
+                        }, 500)
+
+                         */
+                    }
+
+                    if (factura_og.pdf == true) {
+                        descargarFactura(folio_og, "pdf");
+
+                        /*
+                        setTimeout(() => {
+                            let t = "Por favor confirme que el archivo xml de la facura haya sido descargado a su computadora. Una vez que confirme éste será elimindado permanentemente.";
+                            if (confirm(t) == true) {
+                                // Create a reference to the file to delete
+                                // Create a root reference
+                                var storageRef = firebase.storage().ref();
+
+                                // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+                                var ref = storageRef.child(`Reembolsos/Facturas/${folio_og}.pdf`);
+
+                                // Delete the file
+                                ref.delete().then(() => {
+                                    // File deleted successfully
+                                }).catch((error) => {
+                                    // Uh-oh, an error occurred!
+                                });
+                            } else {
+                                alert("La factura con el folio anterior no fue borrada.")
+                            }
+                        }, 500)
+
+                         */
+                    }
+
+                    db.collection("facturas").doc(folio).set({
+                        emisor: emisor,
+                        concepto: concepto,
+                        monto: monto,
+                        reembolsable: reembolsable,
+                        fecha: fecha_timestamp,
+                        notas: notas,
+                        xml: false,
+                        pdf: false,
+                        reembolso: factura_og.reembolso
+                    })
+                        .then(() => {
+                            console.log("Document successfully written!");
+
+                            document.getElementById("myModalLabel").innerText = "Operación exitosa";
+                            document.getElementById("myModalBody").innerHTML = "¡Los cambios fueron guardados exitosamente!";
+                            document.getElementById("myModalFooter").style.display = "initial";
+                        })
+                        .catch((error) => {
+                            console.error("Error writing document: ", error);
+                        });
+                }).catch((error) => {
+                    console.error("Error removing document: ", error);
+                });
+            } else {
+                //Update old factura
+                db.collection("facturas").doc(folio).update({
+                    emisor: emisor,
+                    concepto: concepto,
+                    monto: monto,
+                    reembolsable: reembolsable,
+                    fecha: fecha_timestamp,
+                    notas: notas,
+                })
+                    .then(() => {
+                        //console.log("Document successfully written!");
+
+                        //alert("¡Cambios guardados exitosamente!")
+                        document.getElementById("myModalLabel").innerText = "Operación exitosa";
+                        document.getElementById("myModalBody").innerHTML = "¡Los cambios fueron guardados exitosamente!";
+                        document.getElementById("myModalFooter").style.display = "initial";
+                    })
+                    .catch((error) => {
+                        console.error("Error writing document: ", error);
+                    });
+            }
+
+
+
+        }
+    </script>
+
+    <script>
+        //Currency Input Support
+        function localStringToNumber( s ) {
+            return Number( String( s ).replace( /[^0-9.-]+/g, "" ) )
+        }
+
+        var currencyInput = document.querySelectorAll( 'input[type="currency"]' );
+
+        for ( var i = 0; i < currencyInput.length; i++ ) {
+
+            var currency = 'MXN'
+            onBlur( {
+                target: currencyInput[ i ]
+            } )
+
+            currencyInput[ i ].addEventListener( 'focus', onFocus )
+            currencyInput[ i ].addEventListener( 'blur', onBlur )
+
+            function onFocus( e ) {
+                var value = e.target.value;
+                e.target.value = value ? localStringToNumber( value ) : ''
+            }
+
+            function onBlur( e ) {
+                var value = e.target.value
+
+                var options = {
+                    maximumFractionDigits: 2,
+                    currency: currency,
+                    style: "currency",
+                }
+
+                e.target.value = ( value || value === 0 ) ?
+                    localStringToNumber( value ).toLocaleString( undefined, options ) :
+                    ''
+            }
+        }
+    </script>
+
+    <script>
+        //Allow for other "Emisor" values apart from the default ones
+        document.getElementById("emisor").addEventListener('change', checkEmisor);
+
+        function checkEmisor(e) {
+            const emisor = document.getElementById("emisor").value;
+            //console.log("emisor", emisor);
+
+            if (emisor == "otro") {
+                document.getElementById("emisor_other").style.display = "initial";
+            } else {
+                document.getElementById("emisor_other").style.display = "none";
+            }
+        }
+    </script>
+
+    <script>
+        // Download a file form a url.
+        function saveFile(url) {
+            return new Promise(function(resolve, reject) {
+                // Get file name from url.
+                var xhr = new XMLHttpRequest();
+                xhr.responseType = 'blob';
+                xhr.onload = function() {
+                    resolve(xhr);
+                };
+                xhr.onerror = reject;
+                xhr.open('GET', url);
+                xhr.send();
+            }).then(function(xhr) {
+                var filename_pre = url.substring(url.lastIndexOf("/") + 1).split("?")[0];
+                //console.log(filename);
+                var filename = filename_pre.split('%2F')[2];
+                var a = document.createElement('a');
+                a.href = window.URL.createObjectURL(xhr.response); // xhr.response is a blob
+                a.download = filename; // Set the file name.
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                return xhr;
+            });
+        }
+
+        function download(urls) {
+            return Promise.all(urls.map(saveFile));
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,2126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Reembolso Detallado</title>
+
+    <!-- Required meta tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+
+    <!-- update the version number as needed -->
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-storage-compat.js"></script>
+
+    <script type="module" src="jszip.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.10/package/dist/xlsx.zahl.js"></script>
+
+    <script>
+        const firebaseApp = firebase.initializeApp({
+            apiKey: "AIzaSyAIrKeHpTwUQLLJipXFnwyI0q7gXYtnZgc",
+            authDomain: "g-house-bf144.firebaseapp.com",
+            databaseURL: "https://g-house-bf144.firebaseio.com",
+            projectId: "g-house-bf144",
+            storageBucket: "g-house-bf144.appspot.com",
+            messagingSenderId: "467660754087",
+            appId: "1:467660754087:web:dcd9d6326a6b3bb1fddf82"
+        });
+    </script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+</head>
+<body>
+
+    <div class="container py-5  align-items-center  justify-content-center">
+        <main>
+            <div class="container text-center">
+                <h1 class="pb-4" id="title">Facturas</h1>
+                <div id="show_email" class="pb-4"></div>
+
+                <p id="f_id" style="display: none"></p>
+            </div>
+
+            <!-- Loading spinner -->
+            <div class="container align-items-center text-center" id="spinner">
+                <strong>Cargando...</strong><br><br>
+                <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+            </div>
+
+            <!-- Main Content -->
+            <div id="main_content" style="visibility: hidden">
+                <!-- Datos del reembolso -->
+                <h2 class="text-center pb-4">Datos del Reembolso</h2>
+                <form class="row g-3 text-left pb-4">
+                    <!-- Row 0 -->
+                    <div class="row pb-2">
+                        <div class="col-md-12" style="display: none" id="asunto-div">
+                            <label for="asunto" class="form-label">Asunto del Reembolso</label>
+                            <input type="text" class="form-control" id="asunto" placeholder="p. ej. Diabetes #2">
+                        </div>
+                    </div>
+                    <!-- Row 1 -->
+                    <div class="row pb-2">
+                        <div class="col">
+                            <label for="persona" class="form-label">Persona</label>
+                            <!-- <input type="text" class="form-control" id="persona"> -->
+                            <select class="form-select" aria-label="Default select example" id="persona">
+                                <option value="EAGU">EAGU</option>
+                                <option value="GEGG">GEGG</option>
+                                <option value="VGB">VGB</option>
+                            </select>
+                        </div>
+                        <div class="col">
+                            <label for="fecha_main" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="fecha_main">
+                        </div>
+                        <div class="col">
+                            <label for="siniestro" class="form-label">Siniestro</label>
+                            <input type="text" class="form-control" id="siniestro" placeholder="01-210257145-001">
+                        </div>
+                    </div>
+
+
+                    <!-- Row 2 -->
+                    <div class="row pb-2">
+                        <div class="col-3">
+                            <label for="reclamado_real" class="form-label">Monto Reclamado Real</label>
+                            <input type="currency" class="form-control" id="reclamado_real" placeholder="Importe">
+                        </div>
+                        <div class="col-3">
+                            <label for="reclamado_met" class="form-label">Monto Reclamado MetLife</label>
+                            <input type="currency" class="form-control" id="reclamado_met" placeholder="Importe">
+                        </div>
+
+
+                        <div class="col-3">
+                            <label for="unpaid_met" class="form-label">Monto NO Pagado MetLife</label>
+                            <input type="currency" class="form-control" id="unpaid_met" placeholder="Importe">
+                        </div>
+                        <div class="col-3">
+                            <label for="unpaid_real" class="form-label">Monto NO Pagado Real</label>
+                            <input type="currency" class="form-control" id="unpaid_real" placeholder="Importe" disabled>
+                        </div>
+                    </div>
+
+                    <!-- Row 3 -->
+                    <div class="row pb-4">
+                        <div class="col-3">
+                            <label for="subtotal" class="form-label">Subtotal</label>
+                            <input type="currency" class="form-control" id="subtotal" placeholder="Importe" disabled>
+                        </div>
+                        <div class="col-3">
+                            <label for="deducible" class="form-label">Deducible</label>
+                            <input type="currency" class="form-control" id="deducible" placeholder="Importe">
+                        </div>
+                        <div class="col-3">
+                            <label for="coaseguro" class="form-label">Coaseguro</label>
+                            <input type="currency" class="form-control" id="coaseguro" placeholder="Importe">
+                        </div>
+                        <div class="col-3">
+                            <label for="pago" class="form-label">Importe del Pago</label>
+                            <input type="currency" class="form-control" id="pago" placeholder="Importe" disabled>
+                        </div>
+                    </div>
+
+
+                    <!-- Row 4 -->
+                    <div class="row pb-2">
+                        <div class="col-1">
+                            <label class="form-label" for="pagado">Pagado</label>
+                            <input class="form-check-input ps-1" type="checkbox" role="switch" id="pagado">
+                        </div>
+                        <div class="form-check form-switch col-11 text-left">
+
+                        </div>
+                    </div>
+
+                    <!-- Row 5 -->
+                    <div class="row pb-2">
+                        <div class="col-6">
+                            <div class="row">
+                                <div class="form-check form-switch col">
+                                    <label for="conceptos_unpaid_met" class="form-label">Conceptos NO Pagados (MetLife)</label>
+                                    <textarea class="form-control" id="conceptos_unpaid_met" rows="4"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="row">
+                                <div class="form-check form-switch col">
+                                    <label for="conceptos_unpaid_real" class="form-label">Conceptos NO Pagados (reales)</label>
+                                    <textarea class="form-control" id="conceptos_unpaid_real" rows="4"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                    <!-- Row 6 -->
+                    <div class="row pb-4">
+                        <div class="col-12 text-center">
+                            <button type="button" class="btn btn-primary" onclick="updateReembolso()">Actualizar Datos</button>
+                        </div>
+                    </div>
+                </form>
+
+                <hr>
+                <div class="container-fluid text-center">
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addFModal">Agregar Factura</button>
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addEModal">Agregar Estudio</button>
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addFileModal">Agregar Archivo</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="descargarTodasLasFacturas()">Descargar Reembolso</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="tableToExcel()">Descargar Excel</button>
+                    <a class="btn btn-outline-secondary" href="Carta%20Remesa.xlsx" download>Carta Remesa</a>
+                </div>
+                <hr>
+
+                <!-- Todas las facturas -->
+                <h2 class="text-center">Facturas</h2>
+                <div class="table-responsive text-center">
+                    <table class="table table-hover" id="facturas_table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Folio</th>
+                            <th scope="col">Emisor</th>
+                            <th scope="col">Concepto</th>
+                            <th scope="col">Monto</th>
+                            <th scope="col">Reembolsable</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Notas</th>
+                            <th scope="col">PDF</th>
+                            <th scope="col">XML</th>
+                        </tr>
+                        </thead>
+                        <tbody id="facturas_table_body">
+                        </tbody>
+                        <tbody id="totales">
+                        <tr id="totales_row"></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+
+
+                <!-- Nueva Factura Modal -->
+                <div class="modal fade" id="addFModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Nueva Factura</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancelar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Folio</span>
+                                        <input type="text" class="form-control" id="folio">
+                                    </div>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Emisor</span>
+                                        <!--
+                                        <input type="text" class="form-control" id="emisor">
+                                        -->
+                                        <select class="form-select" aria-label="Default select example" id="emisor">
+                                            <option value="otro">Otro</option>
+                                            <option value="San Pablo" selected>San Pablo</option>
+                                            <option value="Farmacia del Ahorro">Farmacia del Ahorro</option>
+                                            <option value="Freestyle">Freestyle (Servicios Farmacéuticos Especializados)</option>
+                                            <option value="Olarte y Akle">Olarte y Akle</option>
+                                            <option value="Sanborn's">Sanborn's</option>
+                                            <option value="Dra. Eugenia">Dra. Eugenia</option>
+                                            <option value="Dra. Cervantes">Dra. Cervantes</option>
+                                            <option value="Costco">Costco</option>
+                                            <option value="Imagenus">Imagenus</option>
+                                        </select>
+
+                                        <input type="text" class="form-control" id="emisor_other" style="display: none">
+                                    </div>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Concepto</span>
+                                        <select class="form-select" aria-label="Default select example" id="concepto">
+                                            <option value="Medicamentos">Medicamentos</option>
+                                            <option value="Gastos Diversos">Gastos Diversos</option>
+                                            <option value="Honorarios Médicos">Honorarios Médicos</option>
+                                            <option value="Estudios">Estudios</option>
+                                            <option value="Materiales">Materiales</option>
+                                            <option value="Hospitalización">Hospitalización</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Monto Factura</span>
+                                        <input type="currency" class="form-control" id="monto" oninput="updateReembolsable(this)">
+                                    </div>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Reembolsable</span>
+                                        <input type="currency" class="form-control" id="reembolsable">
+                                    </div>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Fecha</span>
+                                        <input type="date" class="form-control" id="fecha" min="2010-01-01" max="2030-12-31">
+                                    </div>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Notas</span>
+                                        <!-- <input type="text" class="form-control" id="emisor"> -->
+                                        <textarea class="form-control" id="notas" rows="5"></textarea>
+                                    </div>
+
+
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" onclick="guardarFactura(this)" data-bs-dismiss="modal">Guardar Factura</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+                <!-- ESTUDIOS -->
+                <h2 class="text-center">Estudios</h2>
+                <div class="table-responsive text-center">
+                    <table class="table table-hover" id="estudios_table">
+                        <thead>
+                        <tr>
+                            <th scope="col">Folio Factura</th>
+                            <th scope="col">Laboratorio</th>
+                            <th scope="col">Orden</th>
+                            <th scope="col">Descripción</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">PDF</th>
+                        </tr>
+                        </thead>
+                        <tbody id="estudios_table_body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Nuevo Estudio Modal -->
+                <div class="modal fade" id="addEModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="EstudioModalLabel">Nuevo Estudio</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancelar"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Folio Factura</span>
+                                        <input type="text" class="form-control" id="folio_e">
+                                    </div>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Laboratorio</span>
+                                        <!--
+                                        <input type="text" class="form-control" id="emisor">
+                                        -->
+                                        <select class="form-select" aria-label="Laboratorio" id="laboratorio">
+                                            <option value="otro">Otro</option>
+                                            <option value="Olarte y Akle">Olarte y Akle</option>
+                                            <option value="Imagenus">Imagenus</option>
+                                            <option value="Laboratorio Médico Polanco">Laboratorio Médico Polanco</option>
+                                        </select>
+
+                                        <input type="text" class="form-control" id="laboratorio_other" style="display: none">
+                                    </div>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text"># Orden</span>
+                                        <input type="text" class="form-control" id="orden">
+                                    </div>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Descripción</span>
+                                        <input type="text" class="form-control" id="descripción">
+                                    </div>
+                                    <div class="mb-3 input-group">
+                                        <span class="input-group-text">Fecha</span>
+                                        <input type="date" class="form-control" id="fecha_e" min="2010-01-01" max="2030-12-31">
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn btn-primary" onclick="guardarEstudio(this)" data-bs-dismiss="modal">Guardar Estudio</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Downloading Modal -->
+            <div class="modal fade" id="myModal" tabindex="-1" aria-labelledby="downloadingModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="myModalLabel">Descargando archivos...</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body" id="myModalBody">
+                            <!-- Loading spinner -->
+                            <div class="container align-items-center text-center" id="saving_spinner">
+                                Por favor espere a que se descarguen todos los archivos, esta operación puede tomar un poco de tiempo.<br><br>
+                                <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer" style="display: none" id="myModalFooter">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+            <!-- ARCHIVOS -->
+            <h2 class="text-center">Archivos</h2>
+            <div class="table-responsive text-center">
+                <table class="table table-hover" id="archivos_table">
+                    <thead>
+                    <tr>
+                        <th scope="col">Descripción</th>
+                        <th scope="col">Fecha</th>
+                        <th scope="col">PDF</th>
+                    </tr>
+                    </thead>
+                    <tbody id="archivos_table_body">
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Nuevo Archivo Modal -->
+            <div class="modal fade" id="addFileModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="ArchivoModalLabel">Nuevo Archivo</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cancelar"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form>
+                                <div class="mb-3 input-group">
+                                    <span class="input-group-text">Descripción</span>
+                                    <input type="text" class="form-control" id="descripción_a">
+                                </div>
+                                <div class="mb-3 input-group">
+                                    <span class="input-group-text">Fecha</span>
+                                    <input type="date" class="form-control" id="fecha_a" min="2010-01-01" max="2030-12-31">
+                                </div>
+                                <div class="mb-3 input-group">
+                                    <input type="checkbox" id="entregable" class="btn-check" id="btn-check-2-outlined" checked autocomplete="off">
+                                    <label class="btn btn-outline-success" for="btn-check-2-outlined">Entregable</label><br>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" onclick="guardarArchivo(this)" data-bs-dismiss="modal">Guardar Archivo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+
+
+    <script>
+        var qd = {};
+        if (location.search) location.search.substr(1).split("&").forEach(function(item) {
+            var s = item.split("="),
+                k = s[0],
+                v = s[1] && decodeURIComponent(s[1]); //  null-coalescing / short-circuit
+            //(k in qd) ? qd[k].push(v) : qd[k] = [v]
+            (qd[k] = qd[k] || []).push(v) // null-coalescing / short-circuit
+        })
+
+        let id = qd.id;
+
+        document.getElementById("f_id").innerText = id[0];
+
+        console.log(qd)
+        //document.getElementById("title").innerText = qd.nombre[0];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const auth = firebaseApp.auth();
+
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // User is signed in, see docs for a list of available properties
+                    // https://firebase.google.com/docs/reference/js/firebase.User
+                    var email1 = user.email;
+
+                    document.getElementById("show_email").innerText = "Bienvenido, " + email1;
+
+                    loadData();
+                    //show();
+
+                    // ...
+                } else {
+                    // User is signed out
+                    //hide();
+                }
+            });
+        });
+
+        var facturas_pdf = [];
+        var facturas_xml = [];
+
+        var all_facturas_objs = []
+
+        var all_estudios_objs = []
+        var estudios_pdf = [];
+
+        var all_archivos_objs = []
+        var archivos_pdf = [];
+
+        function loadData() {
+            var db = firebaseApp.firestore();
+            /*
+            if (location.hostname === "localhost") {
+                db.useEmulator("localhost", 8080);
+            }
+            */
+
+            const options = { style: 'currency', currency: 'MXN' };
+            const formatter = new Intl.NumberFormat('es-MX', options);
+
+            console.log(id[0])
+
+            var totales = {
+                monto: 0,
+                reembolsable: 0
+            };
+
+            var i = 1;
+
+            //Cargar facturas
+            //var index = 0;
+            db.collection("facturas").where("reembolso", "==", id[0]).orderBy("fecha")
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added" || change.type === "modified") {
+                            var f = change.doc.data();
+                            f.id = change.doc.id;
+                            //console.log(f.id)
+
+                            var row_index = 0;
+                            if (change.type === "modified") {
+                                let monto_old = Number(document.getElementById(`${f.id}_monto`).innerText.replace('$', '').replace(',', ''));
+                                let reembolsable_old = Number(document.getElementById(`${f.id}_reembolsable`).innerText.replace('$', '').replace(',', ''));
+
+                                totales.monto -= monto_old;
+                                totales.reembolsable -= reembolsable_old;
+
+                                let row_old = document.getElementById(f.id);
+                                row_index = row_old.rowIndex;
+                                row_old.remove();
+
+                                all_facturas_objs.filter(x => x.id != f.id);
+                            }
+
+                            all_facturas_objs.push(f);
+
+                            const tbody = document.getElementById("facturas_table_body");
+
+                            let f_row = document.createElement("tr");
+                            f_row.id = f.id;
+
+                            let folio = document.createElement("td");
+                            //folio.innerText = f.id;
+                            let button_div = document.createElement("div");
+                            const item_link = `editar-factura/index.html?id=${f.id}`;
+                            //button_div.innerHTML = `${r.asunto}<br><button type="button" class="btn btn-outline-dark btn-sm" onClick="window.open('${item_link}')"><i class="bi bi-arrow-up-right-square"></i></button>`;
+                            button_div.innerHTML = `${f.id} <button type="button" class="btn btn-outline-dark btn-sm" onClick="window.open('${item_link}')" style="padding: 10; border: none"><i class="bi bi-pencil"></i></button>
+<button type="button" class="btn btn-outline-danger btn-sm" onClick="borrarFactura(this, '${f.id}', ${f.xml}, ${f.pdf}, ${f.monto}, ${f.reembolsable})" style="padding: 10; border: none"><i class="bi bi-trash"></i></button>`;
+                            folio.append(button_div);
+
+                            let emisor = document.createElement("td");
+                            emisor.innerText = f.emisor;
+
+                            let concepto = document.createElement("td");
+                            concepto.innerText = f.concepto;
+
+                            let monto = document.createElement("td");
+                            monto.id = `${f.id}_monto`;
+                            monto.innerText = formatter.format(f.monto);
+                            totales.monto += f.monto;
+                            //console.log("monto total", totales.monto)
+
+                            let reembolsable = document.createElement("td");
+                            reembolsable.id = `${f.id}_reembolsable`;
+                            reembolsable.innerText = formatter.format(f.reembolsable);
+                            totales.reembolsable += f.reembolsable;
+                            //console.log("reembolsable total", totales.reembolsable)
+
+                            let fecha = document.createElement("td");
+                            fecha.innerText = f.fecha.toDate().toLocaleDateString();
+
+                            let notas = document.createElement("td");
+                            notas.innerText = f.notas;
+
+                            let pdf = document.createElement("td");
+                            if (f.pdf == false) {
+                                let pdf_input = document.createElement("div");
+                                pdf_input.innerHTML = `<input type="file" class="form-control form-control-sm" id="${f.id}_pdf_input" name="${f.id}_pdf_input" accept=".pdf">`;
+                                pdf.append(pdf_input);
+                            } else if (f.pdf == true) {
+                                const button = document.createElement("div");
+                                //button.innerHTML = `<input type="button" value="Ver" onclick="descargarFactura(this, '${f.id}', 'pdf')" class="btn btn-dark"/>`;
+                                button.innerHTML = `<button onclick="descargarFactura(this, '${f.id}', 'pdf')" class="btn btn-dark"><i class="bi bi-file-pdf"></i></button>`
+
+                                pdf.append(button);
+                                if (change.type === "added") {
+                                    facturas_pdf.push(f.id);
+                                } else if (change.type === "modified") {
+                                    facturas_pdf = facturas_pdf.filter(factura => factura!=f.id);
+                                    facturas_pdf.push(f.id);
+                                }
+                            }
+
+                            let xml = document.createElement("td");
+                            if (f.xml == false) {
+                                let xml_input = document.createElement("div");
+                                xml_input.innerHTML = `<input type="file" class="form-control form-control-sm" id="${f.id}_xml_input" name="${f.id}_xml_input" accept=".xml">`;
+                                xml.append(xml_input);
+                            } else if (f.xml == true) {
+                                const button = document.createElement("div");
+                                //button.innerHTML = `<input type="button" value="Ver" onclick="descargarFactura(this, '${f.id}', 'xml')" class="btn btn-dark"/>`;
+                                button.innerHTML = `<button onclick="descargarFactura(this, '${f.id}', 'xml')" class="btn btn-dark"><i class="bi bi-filetype-xml"></i></button>`
+
+                                xml.append(button);
+                                if (change.type === "added") {
+                                    facturas_xml.push(f.id);
+                                } else if (change.type === "modified") {
+                                    facturas_xml = facturas_xml.filter(factura => factura!=f.id);
+                                    facturas_xml.push(f.id);
+                                }
+                            }
+
+                            f_row.append(folio, emisor, concepto, monto, reembolsable, fecha, notas, pdf, xml);
+
+                            if (change.type === "added") {
+                                tbody.append(f_row);
+                            } else {
+                                //document.getElementById(f.id).outerHTML = f_row
+                                var row = tbody.insertRow(row_index - 1);
+                                row.id = f.id;
+                                row.append(folio, emisor, concepto, monto, reembolsable, fecha, notas, pdf, xml);
+                            }
+
+                            if (f.pdf == false) {
+                                document.getElementById(`${f.id}_pdf_input`).addEventListener('change', uploadFile);
+                            }
+
+                            if (f.xml == false) {
+                                document.getElementById(`${f.id}_xml_input`).addEventListener('change', uploadFile)
+                            }
+
+                            //console.log("Nueva factura: ", change.doc.data());
+
+
+                        }
+                        if (change.type === "removed") {
+                            //console.log("Removed city: ", change.doc.data());
+
+                            var f = change.doc.data();
+                            f.id = change.doc.id;
+
+                            //let monto_old = Number(document.getElementById(`${f.id}_monto`).innerText.replace('$', '').replace(',', ''));
+                            //let reembolsable_old = Number(document.getElementById(`${f.id}_reembolsable`).innerText.replace('$', '').replace(',', ''));
+
+                            totales.monto -= f.monto;
+                            totales.reembolsable -= f.reembolsable;
+
+                            facturas_xml = facturas_xml.filter(factura => factura!=f.id);
+                            facturas_pdf = facturas_pdf.filter(factura => factura!=f.id);
+
+                            let row_old = document.getElementById(f.id);
+                            row_old.remove();
+
+                            all_facturas_objs.filter(x => x.id != f.id);
+                        }
+
+                        //Totales Row
+                        {
+                            const tbody = document.getElementById("totales");
+
+                            document.getElementById("totales_row").remove();
+
+                            let f_row = document.createElement("tr");
+                            f_row.id = "totales_row";
+
+                            let folio = document.createElement("th");
+                            folio.innerText = "Total";
+                            let emisor = document.createElement("td");
+                            let concepto = document.createElement("td");
+
+                            let monto = document.createElement("th");
+                            monto.innerText = formatter.format(totales.monto);
+                            let reembolsable = document.createElement("th");
+                            reembolsable.innerText = formatter.format(totales.reembolsable);
+
+                            let fecha = document.createElement("td");
+                            let notas = document.createElement("td");
+                            let pdf = document.createElement("td");
+                            let xml = document.createElement("td");
+
+                            f_row.append(folio, emisor, concepto, monto, reembolsable, fecha, notas, pdf, xml);
+
+                            tbody.append(f_row);
+                        }
+                    });
+                });
+
+            //Cargar datos del reembolso
+            var docRef = db.collection("reembolsos").doc(id[0]);
+
+            docRef.get().then((doc) => {
+                if (doc.exists) {
+                    //console.log("Document data:", doc.data());
+                    const r = doc.data();
+                    r.no_pagado_real = r.reclamado_real - r.reclamado_met + r.no_pagado_met;
+                    r.subtotal = r.reclamado_met - r.no_pagado_met;
+                    r.pago = r.reclamado_met - r.no_pagado_met - r.deducible - r.coaseguro;
+
+                    document.getElementById("title").innerText = r.asunto;
+                    if (r.asunto == "new") {
+                        document.getElementById("asunto-div").style.display = "initial";
+
+                        document.getElementById("title").innerText = "Nuevo Reembolso";
+                    } else {
+                        document.getElementById("asunto").value = r.asunto;
+                        document.getElementById("persona").value = r.persona;
+
+                        document.getElementById("fecha_main").value = r.fecha.toDate().toLocaleDateString('en-CA');
+
+                        document.getElementById("siniestro").value = r.siniestro;
+
+                        const options = {
+                            maximumFractionDigits: 2,
+                            currency: currency,
+                            style: "currency",
+                        }
+                        document.getElementById("reclamado_real").value = r.reclamado_real.toLocaleString(undefined, options);
+                        document.getElementById("reclamado_met").value = r.reclamado_met.toLocaleString(undefined, options);
+                        document.getElementById("unpaid_real").value = r.no_pagado_real.toLocaleString(undefined, options);
+                        document.getElementById("unpaid_met").value = r.no_pagado_met.toLocaleString(undefined, options);
+                        document.getElementById("subtotal").value = r.subtotal.toLocaleString(undefined, options);
+                        document.getElementById("deducible").value = r.deducible.toLocaleString(undefined, options);
+                        document.getElementById("coaseguro").value = r.coaseguro.toLocaleString(undefined, options);
+                        document.getElementById("pago").value = r.pago.toLocaleString(undefined, options);
+
+                        document.getElementById("pagado").checked = r.pagado;
+                        document.getElementById("conceptos_unpaid_met").value = r.unpaid_items_met;
+                        document.getElementById("conceptos_unpaid_real").value = r.unpaid_items_real;
+                    }
+
+                    //Hide spinner & show main content
+                    document.getElementById("spinner").style.visibility = "hidden"
+                    document.getElementById("main_content").style.visibility = "visible";
+
+                } else {
+                    // doc.data() will be undefined in this case
+                    console.log("No such document!");
+                }
+            }).catch((error) => {
+                console.log("Error getting document:", error);
+            });
+
+            // Cargar estudios
+            db.collection("estudios").where("reembolso", "==", id[0]).orderBy("fecha")
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added" || change.type === "modified") {
+                            var f = change.doc.data();
+                            f.id = change.doc.id;
+                            //console.log(f.id)
+
+                            var row_index = 0;
+                            if (change.type === "modified") {
+                                let row_old = document.getElementById(f.id);
+                                row_index = row_old.rowIndex;
+                                row_old.remove();
+
+                                all_estudios_objs.filter(x => x.id != f.id);
+                            }
+
+                            all_estudios_objs.push(f);
+
+                            const tbody = document.getElementById("estudios_table_body");
+
+                            let f_row = document.createElement("tr");
+                            f_row.id = f.id;
+
+                            let folio = document.createElement("td");
+                            //folio.innerText = f.id;
+                            let button_div = document.createElement("div");
+                            const item_link = `editar-estudio/index.html?id=${f.id}`;
+                            //button_div.innerHTML = `${r.asunto}<br><button type="button" class="btn btn-outline-dark btn-sm" onClick="window.open('${item_link}')"><i class="bi bi-arrow-up-right-square"></i></button>`;
+                            button_div.innerHTML = `${f.folio} <button type="button" class="btn btn-outline-dark btn-sm" onClick="window.open('${item_link}')" style="padding: 10; border: none"><i class="bi bi-pencil"></i></button> <button type="button" class="btn btn-outline-danger btn-sm" onClick="borrarEstudio(this, '${f.id}', ${f.pdf}, '${f.descripción}')" style="padding: 10; border: none"><i class="bi bi-trash"></i></button>`;
+                            folio.append(button_div);
+
+                            let laboratorio = document.createElement("td");
+                            laboratorio.innerText = f.laboratorio;
+
+                            let orden = document.createElement("td");
+                            orden.innerText = f.orden;
+
+                            let descripción = document.createElement("td");
+                            descripción.innerText = f.descripción;
+
+                            let fecha = document.createElement("td");
+                            fecha.innerText = f.fecha.toDate().toLocaleDateString();
+
+                            let pdf = document.createElement("td");
+                            if (f.pdf == false) {
+                                let pdf_input = document.createElement("div");
+                                pdf_input.innerHTML = `<input type="file" class="form-control form-control-sm" id="${f.id}_pdf_input" name="${f.id}_pdf_input" accept=".pdf">`;
+                                pdf.append(pdf_input);
+                            } else if (f.pdf == true) {
+                                const button = document.createElement("div");
+                                //button.innerHTML = `<input type="button" value="Ver" onclick="descargarFactura(this, '${f.id}', 'pdf')" class="btn btn-dark"/>`;
+                                button.innerHTML = `<button onclick="descargarEstudio(this, '${f.id}', 'pdf')" class="btn btn-dark"><i class="bi bi-file-pdf"></i></button>`
+
+                                pdf.append(button);
+                                if (change.type === "added") {
+                                    estudios_pdf.push(f.id);
+                                } else if (change.type === "modified") {
+                                    estudios_pdf = estudios_pdf.filter(estudio => estudio!=f.id);
+                                    estudios_pdf.push(f.id);
+                                }
+                            }
+
+                            f_row.append(folio, laboratorio, orden, descripción, fecha, pdf);
+
+                            if (change.type === "added") {
+                                tbody.append(f_row);
+                            } else {
+                                //document.getElementById(f.id).outerHTML = f_row
+                                var row = tbody.insertRow(row_index - 1);
+                                row.id = f.id;
+                                row.append(folio, laboratorio, orden, descripción, fecha, pdf);
+                            }
+
+                            if (f.pdf == false) {
+                                document.getElementById(`${f.id}_pdf_input`).addEventListener('change', uploadEstudio);
+                            }
+
+                            //console.log("Nueva factura: ", change.doc.data());
+                        }
+                        if (change.type === "removed") {
+                            //console.log("Removed city: ", change.doc.data());
+
+                            var f = change.doc.data();
+                            f.id = change.doc.id;
+
+                            //let monto_old = Number(document.getElementById(`${f.id}_monto`).innerText.replace('$', '').replace(',', ''));
+                            //let reembolsable_old = Number(document.getElementById(`${f.id}_reembolsable`).innerText.replace('$', '').replace(',', ''));
+
+                            estudios_pdf = estudios_pdf.filter(estudio => estudio!=f.id);
+
+                            let row_old = document.getElementById(f.id);
+                            row_old.remove();
+
+                            all_estudios_objs.filter(x => x.id != f.id);
+                        }
+                    });
+                });
+
+            // Cargar archivos
+            db.collection("archivos").where("reembolso", "==", id[0]).orderBy("fecha")
+                .onSnapshot((snapshot) => {
+                    snapshot.docChanges().forEach((change) => {
+                        if (change.type === "added" || change.type === "modified") {
+                            var f = change.doc.data();
+                            f.id = change.doc.id;
+                            //console.log(f.id)
+
+                            var row_index = 0;
+                            if (change.type === "modified") {
+                                let row_old = document.getElementById(f.id);
+                                row_index = row_old.rowIndex;
+                                row_old.remove();
+
+                                all_archivos_objs.filter(x => x.id != f.id);
+                            }
+
+                            all_archivos_objs.push(f);
+
+                            const tbody = document.getElementById("archivos_table_body");
+
+                            let f_row = document.createElement("tr");
+                            f_row.id = f.id;
+
+                            let descripción = document.createElement("td");
+                            //folio.innerText = f.id;
+                            let button_div = document.createElement("div");
+                            const item_link = `editar-archivo/index.html?id=${f.id}`;
+                            //button_div.innerHTML = `${r.asunto}<br><button type="button" class="btn btn-outline-dark btn-sm" onClick="window.open('${item_link}')"><i class="bi bi-arrow-up-right-square"></i></button>`;
+                            button_div.innerHTML = `${f.descripción} <button type="button" class="btn btn-outline-danger btn-sm" onClick="borrarArchivo(this, '${f.id}', ${f.pdf}, '${f.descripción}')" style="padding: 10; border: none"><i class="bi bi-trash"></i></button>`;
+                            descripción.append(button_div);
+
+                            /*
+                            let descripción = document.createElement("td");
+                            descripción.innerText = f.descripción;
+
+                             */
+
+                            let fecha = document.createElement("td");
+                            fecha.innerText = f.fecha.toDate().toLocaleDateString();
+
+                            let pdf = document.createElement("td");
+                            if (f.pdf == false) {
+                                let pdf_input = document.createElement("div");
+                                pdf_input.innerHTML = `<input type="file" class="form-control form-control-sm" id="${f.id}_pdf_input" name="${f.id}_pdf_input" accept=".pdf">`;
+                                pdf.append(pdf_input);
+                            } else if (f.pdf == true) {
+                                const button = document.createElement("div");
+                                //button.innerHTML = `<input type="button" value="Ver" onclick="descargarFactura(this, '${f.id}', 'pdf')" class="btn btn-dark"/>`;
+                                button.innerHTML = `<button onclick="descargarArchivo(this, '${f.id}', 'pdf')" class="btn btn-dark"><i class="bi bi-file-pdf"></i></button>`
+
+                                pdf.append(button);
+
+                                if (change.type === "added" && f.entregable === true) {
+                                    archivos_pdf.push(f.id);
+                                } else if (change.type === "modified") {
+                                    archivos_pdf = archivos_pdf.filter(estudio => estudio != f.id);
+                                    if (f.entregable === true) {
+                                        archivos_pdf.push(f.id);
+                                    }
+                                }
+                            }
+
+                            f_row.append(descripción, fecha, pdf);
+
+                            if (change.type === "added") {
+                                tbody.append(f_row);
+                            } else {
+                                //document.getElementById(f.id).outerHTML = f_row
+                                var row = tbody.insertRow(row_index - 1);
+                                row.id = f.id;
+                                row.append(descripción, fecha, pdf);
+                            }
+
+                            if (f.pdf == false) {
+                                document.getElementById(`${f.id}_pdf_input`).addEventListener('change', uploadArchivo);
+                            }
+
+                            //console.log("Nueva factura: ", change.doc.data());
+                        }
+                        if (change.type === "removed") {
+                            //console.log("Removed city: ", change.doc.data());
+
+                            var f = change.doc.data();
+                            f.id = change.doc.id;
+
+                            //let monto_old = Number(document.getElementById(`${f.id}_monto`).innerText.replace('$', '').replace(',', ''));
+                            //let reembolsable_old = Number(document.getElementById(`${f.id}_reembolsable`).innerText.replace('$', '').replace(',', ''));
+
+                            archivos_pdf = archivos_pdf.filter(estudio => estudio!=f.id);
+
+                            let row_old = document.getElementById(f.id);
+                            row_old.remove();
+
+                            all_archivos_objs.filter(x => x.id != f.id);
+                        }
+                    });
+                });
+        }
+
+        function excelFromData(data) {
+            var workbook = XLSX.utils.book_new(),
+                worksheet = XLSX.utils.aoa_to_sheet(data);
+            workbook.SheetNames.push("First");
+            workbook.Sheets["First"] = worksheet;
+
+            // (C3) TO BINARY STRING
+            var xlsbin = XLSX.write(workbook, {
+                bookType: "xlsx",
+                type: "binary"
+            });
+
+            // (C4) TO BLOB OBJECT
+            var buffer = new ArrayBuffer(xlsbin.length),
+                array = new Uint8Array(buffer);
+            for (var i=0; i<xlsbin.length; i++) {
+                array[i] = xlsbin.charCodeAt(i) & 0XFF;
+            }
+            var xlsblob = new Blob([buffer], {type:"application/octet-stream"});
+            delete array; delete buffer; delete xlsbin;
+
+            var url = window.URL.createObjectURL(xlsblob),
+                anchor = document.createElement("a");
+            anchor.href = url;
+            anchor.download = "lista de facturas.xlsx";
+            anchor.click();
+            window.URL.revokeObjectURL(url);
+            delete anchor;
+        }
+
+        async function get_file_url(ref) {
+            return new Promise(function (resolve, reject) {
+                ref.getDownloadURL()
+                    .then((url) => {
+                        //pdfs.push(url);
+                        //all_urls.push(url);
+                        //console.log(url);
+                        resolve(url);
+                    })
+                    .catch((error) => {
+                        // Handle any errors
+                        console.log("Error downloading files...")
+                        reject(error);
+                    });
+            }).then((url) => {
+                //console.log(url);
+                return url;
+            })
+        }
+
+        async function descargarTodasLasFacturas() {
+            const myModal = new bootstrap.Modal(document.getElementById('myModal'), {})
+            myModal.show();
+
+            var refs = [];
+            var pdf_refs_ready = false;
+            var xml_refs_ready = false;
+            var ids_refs_ready = false;
+            var estudios_refs_ready = false;
+            var archivos_refs_ready = false;
+
+            let pdfs = new Promise(function(myResolve, myReject) {
+                var storageRef = firebase.storage().ref();
+
+                for (let i = 0; i < facturas_pdf.length; i++) {
+                    //console.log(facturas[i]);
+                    const folio = facturas_pdf[i];
+                    var ref_pdf = storageRef.child(`Reembolsos/Facturas/${folio}.pdf`);
+                    //console.log(`Downloading ${folio}.pdf`);
+
+                    refs.push(ref_pdf);
+
+                    if (i + 1 == facturas_pdf.length) {
+                        myResolve();
+                    }
+                }
+            });
+
+            let xmls = new Promise(function(myResolve, myReject) {
+                var storageRef = firebase.storage().ref();
+
+                for (let i = 0; i < facturas_xml.length; i++) {
+                    //console.log(facturas[i]);
+                    const folio = facturas_xml[i];
+                    var ref_xml = storageRef.child(`Reembolsos/Facturas/${folio}.xml`);
+
+                    refs.push(ref_xml);
+
+                    if (i + 1 == facturas_xml.length) {
+                        myResolve();
+                    }
+                }
+            });
+
+            let ids = new Promise(function (resolve, reject) {
+                var storageRef = firebase.storage().ref();
+
+                var persons = ["EAGU"];
+                let person = document.getElementById("persona").value;
+
+                if (person == "VGB") {
+                    persons.push(person);
+                }
+
+                for (let i = 0; i < persons.length; i++) {
+                    //console.log(facturas[i]);
+                    const persona = persons[i];
+                    var ref_person_id = storageRef.child(`Reembolsos/Identificaciones/INE ${persona}.pdf`);
+
+                    refs.push(ref_person_id);
+
+                    if (i + 1 == persons.length) {
+                        resolve();
+                    }
+                }
+
+                if (i + 1 != persons.length) {
+                    reject();
+                }
+            });
+
+            let estudios = new Promise(function(myResolve, myReject) {
+                var storageRef = firebase.storage().ref();
+
+                for (let i = 0; i < estudios_pdf.length; i++) {
+                    //console.log(facturas[i]);
+                    const folio = estudios_pdf[i];
+                    var ref_estudio = storageRef.child(`Reembolsos/Estudios/ESTUDIO-${folio}.pdf`);
+
+                    refs.push(ref_estudio);
+
+                    if (i + 1 == estudios_pdf.length) {
+                        myResolve();
+                    }
+                }
+            });
+
+            let archivos = new Promise(function(myResolve, myReject) {
+                var storageRef = firebase.storage().ref();
+
+                for (let i = 0; i < archivos_pdf.length; i++) {
+                    //console.log(facturas[i]);
+                    const folio = archivos_pdf[i];
+                    var ref_archivo = storageRef.child(`Reembolsos/Archivos/ARCHIVO-${folio}.pdf`);
+
+                    refs.push(ref_archivo);
+
+                    if (i + 1 == archivos_pdf.length) {
+                        myResolve();
+                    }
+                }
+            });
+
+            pdfs.then(() => {
+                pdf_refs_ready = true;
+            });
+
+            xmls.then(() => {
+                xml_refs_ready = true;
+            })
+
+            ids.then(() => {
+                ids_refs_ready = true;
+            }).catch(() => {
+                console.error("Couldn't download all IDs.")
+                ids_refs_ready = true;
+            })
+
+            estudios.then(() => {
+                estudios_refs_ready = true;
+            })
+
+            archivos.then(() => {
+                archivos_refs_ready = true;
+            })
+
+            await until(_ => (pdf_refs_ready == true && xml_refs_ready == true && ids_refs_ready == true && estudios_refs_ready == true && archivos_refs_ready == true));
+
+            let urls = new Promise(async function (resolve, reject) {
+                var arr = [];
+
+                for (let i = 0; i < refs.length; i++) {
+                    let ref = refs[i];
+
+                    const url = await get_file_url(ref);
+                    console.log(url);
+
+                    arr.push(url);
+
+                    if (arr.length == refs.length) {
+                        resolve(arr);
+                    }
+                }
+            });
+
+            urls.then(async (urls) => {
+                //all_urls = urls;
+                console.log(urls);
+
+                var zip = new JSZip();
+
+                for (let i = 0; i < urls.length; i++) {
+                    let file = await saveFile(urls[i], false);
+
+                    console.log(file);
+                    console.log(file.response);
+
+                    const arr1 = urls[i].split('%2F');
+                    const arr2 = arr1[2].split('.');
+                    const id = arr2[0].replace('%20', ' ');
+                    const type = arr2[1].split('?')[0]
+
+                    zip.file(`${id}.${type}`, file.response);
+                }
+
+                zip.generateAsync({type:"blob"})
+                    .then(function(content) {
+                        // see FileSaver.js
+                        //saveAs(content, "Facturas.zip");
+                        var a = document.createElement('a');
+                        a.href = window.URL.createObjectURL(content); // content is a blob
+                        a.download = `${document.getElementById("title").innerText} ${document.getElementById("persona").value}.zip`; // Set the file name.
+                        a.style.display = 'none';
+                        document.body.appendChild(a);
+                        a.click();
+
+                        //facturasToExcel();
+
+                        document.getElementById("myModalLabel").innerText = "Operación exitosa";
+                        document.getElementById("myModalBody").innerHTML = "¡Los archivos fueron descargados exitosamente!";
+                        document.getElementById("myModalFooter").style.display = "initial";
+                    });
+
+
+            })
+        }
+
+        function facturasToExcel() {
+            var data = []
+
+            data.push(["Folio", "Emisor", "Concepto", "Monto", "Reembolsable"]);
+
+            for (let i = 0; i < all_facturas_objs.length; i++) {
+                let f = all_facturas_objs[i];
+
+                let f_array = [];
+                f_array.push(f.id);
+                f_array.push(f.emisor);
+                f_array.push(f.concepto);
+                f_array.push(f.monto);
+                f_array.push(f.reembolsable);
+
+                data.push(f_array)
+            }
+
+            excelFromData(data);
+        }
+
+        function tableToExcel() {
+            var wb = XLSX.utils.table_to_book(document.getElementById("facturas_table"));
+            /* Export to file (start a download) */
+            XLSX.writeFile(wb, `${document.getElementById("title").innerText} ${document.getElementById("persona").value}.xlsx`);
+
+            //XLSX.writeFile(wb, `${document.getElementById("title").innerText} ${document.getElementById("persona").value}.numbers`, {numbers: XLSX_ZAHL_PAYLOAD, compression: true});
+        }
+
+        function descargarFactura(element, folio, file_type) {
+            // Create a root reference
+            var storageRef = firebase.storage().ref();
+
+            // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+            var ref = storageRef.child(`Reembolsos/Facturas/${folio}.${file_type}`);
+
+            ref.getDownloadURL()
+                .then((url) => {
+                    //console.log(url)
+
+                    window.open(url, target="_blank");
+                })
+                .catch((error) => {
+                    // Handle any errors
+                    console.log("Error downloading files...")
+                });
+        }
+
+        function descargarEstudio(element, folio, file_type) {
+            // Create a root reference
+            var storageRef = firebase.storage().ref();
+
+            // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+            var ref = storageRef.child(`Reembolsos/Estudios/ESTUDIO-${folio}.${file_type}`);
+
+            ref.getDownloadURL()
+                .then((url) => {
+                    //console.log(url)
+
+                    window.open(url, target="_blank");
+                })
+                .catch((error) => {
+                    // Handle any errors
+                    console.log("Error downloading files...")
+                });
+        }
+
+        function descargarArchivo(element, folio, file_type) {
+            // Create a root reference
+            var storageRef = firebase.storage().ref();
+
+            // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+            var ref = storageRef.child(`Reembolsos/Archivos/ARCHIVO-${folio}.${file_type}`);
+
+            ref.getDownloadURL()
+                .then((url) => {
+                    //console.log(url)
+
+                    window.open(url, target="_blank");
+                })
+                .catch((error) => {
+                    // Handle any errors
+                    console.log("Error downloading files...")
+                });
+        }
+
+        function uploadFile(sender) {
+            let id = sender.srcElement.id;
+            //console.log(id);
+
+            const id_split = id.split('_')
+
+            const folio = id_split[0];
+            const file_type = id_split[1];
+
+            //console.log(folio, file_type);
+
+            const files = document.getElementById(`${id}`).files;
+
+            if (files.length > 0) {
+                const file = files[0];
+
+                // Create a root reference
+                var storageRef = firebase.storage().ref();
+
+                // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+                var ref = storageRef.child(`Reembolsos/Facturas/${folio}.${file_type}`);
+
+                // 'file' comes from the Blob or File API
+                /*
+                ref.put(file).then((snapshot) => {
+                    console.log('Uploaded a blob or file!');
+                });
+                 */
+
+                //Full example
+                var uploadTask = ref.put(file);
+
+                // Register three observers:
+                // 1. 'state_changed' observer, called any time the state changes
+                // 2. Error observer, called on failure
+                // 3. Completion observer, called on successful completion
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        // Observe state change events such as progress, pause, and resume
+                        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                        var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log('Upload is ' + progress + '% done');
+                        switch (snapshot.state) {
+                            case firebase.storage.TaskState.PAUSED: // or 'paused'
+                                console.log('Upload is paused');
+                                break;
+                            case firebase.storage.TaskState.RUNNING: // or 'running'
+                                console.log('Upload is running');
+                                break;
+                        }
+                    },
+                    (error) => {
+                        // Handle unsuccessful uploads
+                        console.log("Error during upload!")
+                    },
+                    () => {
+                        // Handle successful uploads on complete
+                        // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                            console.log('File available at', downloadURL);
+
+                            var db = firebaseApp.firestore();
+
+                            var ref = db.collection("facturas").doc(folio);
+
+                            // Set the "capital" field of the city 'DC'
+                            if (file_type == "pdf") {
+                                return ref.update({
+                                    pdf: true
+                                })
+                                    .then(() => {
+                                        //console.log("Document successfully updated!");
+                                    })
+                                    .catch((error) => {
+                                        // The document probably doesn't exist.
+                                        console.error("Error updating document: ", error);
+                                    });
+                            } else if (file_type == "xml") {
+                                return ref.update({
+                                    xml: true
+                                })
+                                    .then(() => {
+                                        //console.log("Document successfully updated!");
+                                    })
+                                    .catch((error) => {
+                                        // The document probably doesn't exist.
+                                        console.error("Error updating document: ", error);
+                                    });
+                            }
+
+                        });
+                    }
+                );
+            }
+        }
+
+        function uploadEstudio(sender) {
+            let id = sender.srcElement.id;
+            //console.log(id);
+
+            const id_split = id.split('_')
+
+            const folio = id_split[0];
+            const file_type = id_split[1];
+
+            //console.log(folio, file_type);
+
+            const files = document.getElementById(`${id}`).files;
+
+            if (files.length > 0) {
+                const file = files[0];
+
+                // Create a root reference
+                var storageRef = firebase.storage().ref();
+
+                // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+                var ref = storageRef.child(`Reembolsos/Estudios/ESTUDIO-${folio}.${file_type}`);
+
+                // 'file' comes from the Blob or File API
+                /*
+                ref.put(file).then((snapshot) => {
+                    console.log('Uploaded a blob or file!');
+                });
+                 */
+
+                //Full example
+                var uploadTask = ref.put(file);
+
+                // Register three observers:
+                // 1. 'state_changed' observer, called any time the state changes
+                // 2. Error observer, called on failure
+                // 3. Completion observer, called on successful completion
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        // Observe state change events such as progress, pause, and resume
+                        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                        var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log('Upload is ' + progress + '% done');
+                        switch (snapshot.state) {
+                            case firebase.storage.TaskState.PAUSED: // or 'paused'
+                                console.log('Upload is paused');
+                                break;
+                            case firebase.storage.TaskState.RUNNING: // or 'running'
+                                console.log('Upload is running');
+                                break;
+                        }
+                    },
+                    (error) => {
+                        // Handle unsuccessful uploads
+                        console.log("Error during upload!")
+                    },
+                    () => {
+                        // Handle successful uploads on complete
+                        // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                            console.log('File available at', downloadURL);
+
+                            var db = firebaseApp.firestore();
+
+                            var ref = db.collection("estudios").doc(folio);
+
+                            // Set the "pdf" field to TRUE
+                            if (file_type == "pdf") {
+                                return ref.update({
+                                    pdf: true
+                                })
+                                    .then(() => {
+                                        //console.log("Document successfully updated!");
+                                    })
+                                    .catch((error) => {
+                                        // The document probably doesn't exist.
+                                        console.error("Error updating document: ", error);
+                                    });
+                            }
+                        });
+                    }
+                );
+            }
+        }
+
+        function uploadArchivo(sender) {
+            let id = sender.srcElement.id;
+            //console.log(id);
+
+            const id_split = id.split('_')
+
+            const folio = id_split[0];
+            const file_type = id_split[1];
+
+            //console.log(folio, file_type);
+
+            const files = document.getElementById(`${id}`).files;
+
+            if (files.length > 0) {
+                const file = files[0];
+
+                // Create a root reference
+                var storageRef = firebase.storage().ref();
+
+                // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+                var ref = storageRef.child(`Reembolsos/Archivos/ARCHIVO-${folio}.${file_type}`);
+
+                // 'file' comes from the Blob or File API
+                /*
+                ref.put(file).then((snapshot) => {
+                    console.log('Uploaded a blob or file!');
+                });
+                 */
+
+                //Full example
+                var uploadTask = ref.put(file);
+
+                // Register three observers:
+                // 1. 'state_changed' observer, called any time the state changes
+                // 2. Error observer, called on failure
+                // 3. Completion observer, called on successful completion
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        // Observe state change events such as progress, pause, and resume
+                        // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                        var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        console.log('Upload is ' + progress + '% done');
+                        switch (snapshot.state) {
+                            case firebase.storage.TaskState.PAUSED: // or 'paused'
+                                console.log('Upload is paused');
+                                break;
+                            case firebase.storage.TaskState.RUNNING: // or 'running'
+                                console.log('Upload is running');
+                                break;
+                        }
+                    },
+                    (error) => {
+                        // Handle unsuccessful uploads
+                        console.log("Error during upload!")
+                    },
+                    () => {
+                        // Handle successful uploads on complete
+                        // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                            console.log('File available at', downloadURL);
+
+                            var db = firebaseApp.firestore();
+
+                            var ref = db.collection("archivos").doc(folio);
+
+                            // Set the "pdf" field to TRUE
+                            if (file_type == "pdf") {
+                                return ref.update({
+                                    pdf: true
+                                })
+                                    .then(() => {
+                                        //console.log("Document successfully updated!");
+                                    })
+                                    .catch((error) => {
+                                        // The document probably doesn't exist.
+                                        console.error("Error updating document: ", error);
+                                    });
+                            }
+                        });
+                    }
+                );
+            }
+        }
+
+        function guardarFactura(element) {
+            var folio = document.getElementById("folio").value.toUpperCase();
+            var emisor = document.getElementById("emisor").value;
+            if (emisor == "otro") {
+                emisor = document.getElementById("emisor_other").value;
+            }
+            const concepto = document.getElementById("concepto").value;
+            const monto = Number(document.getElementById("monto").value.replace('$', '').replace(',', ''));
+            const reembolsable = Number(document.getElementById("reembolsable").value.replace('$', '').replace(',', ''));
+            const fecha = new Date(document.getElementById("fecha").value);
+            const date = fecha.getUTCDate();
+            fecha.setHours(0);
+            fecha.setDate(date)
+            const fecha_timestamp = firebase.firestore.Timestamp.fromDate(fecha);
+            const notas = document.getElementById("notas").value;
+            const reembolso = document.getElementById("f_id").innerText;
+
+            //console.log("Monto", monto);
+            //console.log("Reembolsable", reembolsable);
+
+            // Add a new document in collection "facturas"
+
+            var db = firebaseApp.firestore();
+
+            db.collection("facturas").doc(folio).set({
+                emisor: emisor,
+                concepto: concepto,
+                monto: monto,
+                reembolsable: reembolsable,
+                fecha: fecha_timestamp,
+                notas: notas,
+                xml: false,
+                pdf: false,
+                reembolso: reembolso
+            })
+                .then(() => {
+                    //console.log("Document successfully written!");
+                    agregarMontoFacturaAReembolso(monto, reembolsable);
+
+                    document.getElementById("folio").value = "";
+                    document.getElementById("emisor").value = "";
+                    document.getElementById("emisor_other").value = "";
+                    document.getElementById("concepto").value = "";
+                    document.getElementById("monto").value = "";
+                    document.getElementById("reembolsable").value = "";
+                    //document.getElementById("fecha").value = "";
+                    document.getElementById("notas").value = "";
+                })
+                .catch((error) => {
+                    console.error("Error writing document: ", error);
+                });
+
+
+        }
+
+        function guardarEstudio(element) {
+            var folio = document.getElementById("folio_e").value.toUpperCase();
+            var laboratorio = document.getElementById("laboratorio").value;
+            if (laboratorio == "otro") {
+                laboratorio = document.getElementById("laboratorio_other").value;
+            }
+            const orden = document.getElementById("orden").value;
+            const descripción = document.getElementById("descripción").value;
+            const fecha = new Date(document.getElementById("fecha_e").value);
+            const date = fecha.getUTCDate();
+            fecha.setHours(0);
+            fecha.setDate(date)
+            const fecha_timestamp = firebase.firestore.Timestamp.fromDate(fecha);
+            const reembolso = document.getElementById("f_id").innerText;
+
+            //console.log("Monto", monto);
+            //console.log("Reembolsable", reembolsable);
+
+            // Add a new document in collection "facturas"
+
+            var db = firebaseApp.firestore();
+
+            db.collection("estudios").add({
+                folio: folio,
+                laboratorio: laboratorio,
+                orden: orden,
+                descripción: descripción,
+                fecha: fecha_timestamp,
+                reembolso: reembolso,
+                pdf: false
+            })
+                .then(() => {
+                    //console.log("Document successfully written!");
+
+                    document.getElementById("folio_e").value = "";
+                    document.getElementById("laboratorio").value = "";
+                    document.getElementById("orden").value = "";
+                    document.getElementById("descripción").value = "";
+                })
+                .catch((error) => {
+                    console.error("Error writing document: ", error);
+                });
+
+
+        }
+
+        function guardarArchivo(element) {
+            const descripción = document.getElementById("descripción_a").value;
+            const fecha = new Date(document.getElementById("fecha_a").value);
+            const date = fecha.getUTCDate();
+            fecha.setHours(0);
+            fecha.setDate(date)
+            const fecha_timestamp = firebase.firestore.Timestamp.fromDate(fecha);
+            const entregable = document.getElementById("entregable").value;
+            const reembolso = document.getElementById("f_id").innerText;
+
+            var db = firebaseApp.firestore();
+
+            db.collection("archivos").add({
+                descripción: descripción,
+                fecha: fecha_timestamp,
+                reembolso: reembolso,
+                entregable: entregable,
+                pdf: false
+            })
+                .then(() => {
+                    document.getElementById("descripción_a").value = "";
+                })
+                .catch((error) => {
+                    console.error("Error writing document: ", error);
+                });
+
+
+        }
+
+        function agregarMontoFacturaAReembolso(monto, reembolsable) {
+            const pagado = document.getElementById("pagado").checked;
+
+            if (!pagado) {
+
+                const reclamado_real = Number(document.getElementById("reclamado_real").value.replace('$', '').replace(',', ''));
+                const reclamado_met = Number(document.getElementById("reclamado_met").value.replace('$', '').replace(',', ''));
+
+                console.log(pagado, reclamado_real, reclamado_met, monto, reembolsable);
+
+                var options = {
+                    maximumFractionDigits: 2,
+                    currency: currency,
+                    style: "currency",
+                }
+
+                document.getElementById("reclamado_real").value = (reclamado_real + reembolsable).toLocaleString(undefined, options);
+                document.getElementById("reclamado_met").value = (reclamado_met + monto).toLocaleString(undefined, options);
+
+                triggerEvent(document.getElementById("reclamado_met"), 'input');
+
+                setTimeout(updateReembolso(false), 2000);
+
+                //updateAutoFields(document.getElementById("monto"));
+            }
+        }
+
+        function updateReembolso(reload = true) {
+            //var r = new Object();
+            const asunto = document.getElementById("asunto").value;
+            const persona = document.getElementById("persona").value;
+
+            const fecha = new Date(document.getElementById("fecha_main").value);
+            const date = fecha.getUTCDate();
+            fecha.setHours(0);
+            fecha.setDate(date)
+            const fecha_timestamp = firebase.firestore.Timestamp.fromDate(fecha);
+
+            const siniestro = document.getElementById("siniestro").value;
+
+            const reclamado_real = Number(document.getElementById("reclamado_real").value.replace('$', '').replace(',', ''));
+            const reclamado_met = Number(document.getElementById("reclamado_met").value.replace('$', '').replace(',', ''));
+            const no_pagado_met = Number(document.getElementById("unpaid_met").value.replace('$', '').replace(',', ''));
+            const deducible = Number(document.getElementById("deducible").value.replace('$', '').replace(',', ''));
+            const coaseguro = Number(document.getElementById("coaseguro").value.replace('$', '').replace(',', ''));
+
+            const pagado = document.getElementById("pagado").checked;
+            const unpaid_items_met = document.getElementById("conceptos_unpaid_met").value;
+            const unpaid_items_real = document.getElementById("conceptos_unpaid_real").value;
+
+            //console.log(id[0], persona, fecha_timestamp, siniestro, reclamado_real, reclamado_met, no_pagado_met, deducible, coaseguro, pagado, unpaid_items_met, unpaid_items_real);
+
+            var db = firebaseApp.firestore();
+
+            return db.collection("reembolsos").doc(id[0]).update({
+                asunto: asunto,
+                persona: persona,
+                fecha: fecha_timestamp,
+                siniestro: siniestro,
+                reclamado_real: reclamado_real,
+                reclamado_met: reclamado_met,
+                no_pagado_met: no_pagado_met,
+                deducible: deducible,
+                coaseguro: coaseguro,
+                pagado: pagado,
+                unpaid_items_met: unpaid_items_met,
+                unpaid_items_real: unpaid_items_real
+            })
+                .then(() => {
+                    console.log("Document successfully updated!");
+                    if (reload) {
+                        alert("¡Cambios guardados exitosamente!")
+                        location.reload();
+                    }
+                })
+                .catch((error) => {
+                    // The document probably doesn't exist.
+                    console.error("Error updating document: ", error);
+                });
+        }
+
+        function borrarFactura(el, folio, xml, pdf, monto, reembolsable) {
+            if (confirm(`¿Estás seguro de que quieres borrar la factura ${folio}? Esta operación NO es reversible.`) == true) {
+                var db = firebaseApp.firestore();
+                db.collection("facturas").doc(folio).delete().then(async () => {
+                    console.log("Document successfully deleted!");
+
+                    agregarMontoFacturaAReembolso(-monto, -reembolsable)
+
+                    var storageRef = firebase.storage().ref();
+
+                    let deleteXML = new Promise(function (resolve, reject) {
+                        var ref = storageRef.child(`Reembolsos/Facturas/${folio}.xml}`);
+
+                        // Delete the file
+                        ref.delete().then(() => {
+                            // File deleted successfully
+                            console.log("xml deleted")
+                            resolve()
+                        }).catch((error) => {
+                            // Uh-oh, an error occurred!
+                            reject(error)
+                        });
+                    });
+
+                    let deletePDF = new Promise(function (resolve, reject) {
+                        var ref = storageRef.child(`Reembolsos/Facturas/${folio}.pdf}`);
+
+                        // Delete the file
+                        ref.delete().then(() => {
+                            // File deleted successfully
+                            console.log("pdf deleted")
+                            resolve()
+                        }).catch((error) => {
+                            // Uh-oh, an error occurred!
+                            reject(error)
+                        });
+                    });
+
+                    var pdfDeleted = false;
+                    var xmlDeleted = false;
+
+                    console.log("pdf", pdf, "xml", xml);
+
+                    if (pdf == true) {
+                        deletePDF.then(() => {
+                            pdfDeleted = true;
+                        })
+                    } else {
+                        pdfDeleted = true;
+                    }
+
+                    if (xml == true) {
+                        deleteXML.then(() => {
+                            xmlDeleted = true;
+                        })
+                    } else {
+                        xmlDeleted = true;
+                    }
+
+                    await until(_ => (pdfDeleted == true && xmlDeleted == true));
+                    updateReembolso(false);
+
+                    alert("¡La factura fue borrada exitosamente!")
+                }).catch((error) => {
+                    console.error("Error removing document: ", error);
+                });
+            }
+        }
+
+        function borrarEstudio(el, folio, pdf, descripción) {
+            if (confirm(`¿Estás seguro de que quieres borrar el estudio ${descripción}? Esta operación NO es reversible.`) == true) {
+                var db = firebaseApp.firestore();
+                db.collection("estudios").doc(folio).delete().then(async () => {
+                    console.log("Document successfully deleted!");
+
+                    var storageRef = firebase.storage().ref();
+
+                    let deletePDF = new Promise(function (resolve, reject) {
+                        var ref = storageRef.child(`Reembolsos/Estudios/ESTUDIO-${folio}.pdf}`);
+
+                        // Delete the file
+                        ref.delete().then(() => {
+                            // File deleted successfully
+                            console.log("pdf deleted")
+                            resolve()
+                        }).catch((error) => {
+                            // Uh-oh, an error occurred!
+                            reject(error)
+                        });
+                    });
+
+                    var pdfDeleted = false;
+
+                    console.log("pdf", pdf);
+
+                    if (pdf == true) {
+                        deletePDF.then(() => {
+                            pdfDeleted = true;
+                        })
+                    } else {
+                        pdfDeleted = true;
+                    }
+
+                    await until(_ => (pdfDeleted == true));
+
+                    alert("¡El estudio fue borrado exitosamente!")
+                }).catch((error) => {
+                    console.error("Error removing document: ", error);
+                });
+            }
+        }
+
+        function borrarArchivo(el, folio, pdf, descripción) {
+            if (confirm(`¿Estás seguro de que quieres borrar el archivo ${descripción}? Esta operación NO es reversible.`) == true) {
+                var db = firebaseApp.firestore();
+                db.collection("archivos").doc(folio).delete().then(async () => {
+                    console.log("Document successfully deleted!");
+
+                    var storageRef = firebase.storage().ref();
+
+                    let deletePDF = new Promise(function (resolve, reject) {
+                        var ref = storageRef.child(`Reembolsos/Archivos/ARCHIVO-${folio}.pdf}`);
+
+                        // Delete the file
+                        ref.delete().then(() => {
+                            // File deleted successfully
+                            console.log("pdf deleted")
+                            resolve()
+                        }).catch((error) => {
+                            // Uh-oh, an error occurred!
+                            reject(error)
+                        });
+                    });
+
+                    var pdfDeleted = false;
+
+                    console.log("pdf", pdf);
+
+                    if (pdf == true) {
+                        deletePDF.then(() => {
+                            pdfDeleted = true;
+                        })
+                    } else {
+                        pdfDeleted = true;
+                    }
+
+                    await until(_ => (pdfDeleted == true));
+
+                    alert("¡El archivo fue borrado exitosamente!")
+                }).catch((error) => {
+                    console.error("Error removing document: ", error);
+                });
+            }
+        }
+
+        function until(conditionFunction) {
+
+            const poll = resolve => {
+                if(conditionFunction()) resolve();
+                else setTimeout(_ => poll(resolve), 400);
+            }
+
+            return new Promise(poll);
+        }
+
+        function borrarArchivoFactura(folio, file_type) {
+            var storageRef = firebase.storage().ref();
+
+            // Create a reference to 'Reembolsos/Facturas/{folio}.{file_type}'
+            var ref = storageRef.child(`Reembolsos/Facturas/${folio}.${file_type}`);
+
+            // Delete the file
+            ref.delete().then(() => {
+                // File deleted successfully
+            }).catch((error) => {
+                // Uh-oh, an error occurred!
+            });
+        }
+    </script>
+
+    <script>
+        function updateReembolsable(el) {
+            var options = {
+                maximumFractionDigits: 2,
+                currency: 'MXN',
+                style: "currency",
+            }
+
+            document.getElementById("reembolsable").value = localStringToNumber( document.getElementById("monto").value ).toLocaleString( undefined, options )
+        }
+
+        //Currency Input Support
+        function localStringToNumber( s ) {
+            return Number( String( s ).replace( /[^0-9.-]+/g, "" ) )
+        }
+
+        var currencyInput = document.querySelectorAll( 'input[type="currency"]' );
+
+        for ( var i = 0; i < currencyInput.length; i++ ) {
+
+            var currency = 'MXN'
+            onBlur( {
+                target: currencyInput[ i ]
+            } )
+
+            currencyInput[ i ].addEventListener( 'focus', onFocus )
+            currencyInput[ i ].addEventListener( 'blur', onBlur )
+
+            function onFocus( e ) {
+                var value = e.target.value;
+                e.target.value = value ? localStringToNumber( value ) : ''
+            }
+
+            function onBlur( e ) {
+                var value = e.target.value
+
+                var options = {
+                    maximumFractionDigits: 2,
+                    currency: currency,
+                    style: "currency",
+                }
+
+                e.target.value = ( value || value === 0 ) ?
+                    localStringToNumber( value ).toLocaleString( undefined, options ) :
+                    ''
+            }
+        }
+    </script>
+
+    <script>
+        //Allow for other "Emisor" values apart from the default ones
+        document.getElementById("emisor").addEventListener('change', checkEmisor);
+
+        function checkEmisor(e) {
+            const emisor = document.getElementById("emisor").value;
+            //console.log("emisor", emisor);
+
+            if (emisor == "otro") {
+                document.getElementById("emisor_other").style.display = "initial";
+            } else {
+                document.getElementById("emisor_other").style.display = "none";
+            }
+        }
+
+        //Update calculated fields automatically
+        document.getElementById("unpaid_met").addEventListener('input', updateAutoFields);
+        document.getElementById("reclamado_met").addEventListener('input', updateAutoFields);
+        document.getElementById("reclamado_real").addEventListener('input', updateAutoFields);
+        document.getElementById("deducible").addEventListener('input', updateAutoFields);
+        document.getElementById("coaseguro").addEventListener('input', updateAutoFields)
+
+        function updateAutoFields(el) {
+            //console.log(el);
+            const id = el.target.id;
+
+            const options = {
+                maximumFractionDigits: 2,
+                currency: currency,
+                style: "currency",
+            }
+
+            var r = new Object();
+            r.no_pagado_met = Number(document.getElementById("unpaid_met").value.replace('$', '').replace(',',''));
+            r.reclamado_met = Number(document.getElementById("reclamado_met").value.replace('$', '').replace(',',''));
+            r.reclamado_real = Number(document.getElementById("reclamado_real").value.replace('$', '').replace(',',''));
+            r.deducible = Number(document.getElementById("deducible").value.replace('$', '').replace(',',''));
+            //r.subtotal = Number(document.getElementById("subtotal").value.replace('$', '').replace(',',''));
+            //r.coaseguro = Number(document.getElementById("coaseguro").value.replace('$', '').replace(',',''));
+
+
+
+            r.no_pagado_real = r.reclamado_real - r.reclamado_met + r.no_pagado_met;
+            r.subtotal = r.reclamado_met - r.no_pagado_met;
+
+            if (id != "coaseguro") {
+                //Coaseguro is not being edited
+                r.coaseguro = Math.round10((r.subtotal - r.deducible) * 0.1, -2);
+                document.getElementById("coaseguro").value = r.coaseguro.toLocaleString(undefined, options);
+            } else {
+                r.coaseguro = Number(document.getElementById("coaseguro").value.replace('$', '').replace(',',''));
+            }
+
+            r.pago = r.reclamado_met - r.no_pagado_met - r.deducible - r.coaseguro;
+
+            document.getElementById("unpaid_real").value = r.no_pagado_real.toLocaleString(undefined, options);
+            document.getElementById("subtotal").value = r.subtotal.toLocaleString(undefined, options);
+            document.getElementById("pago").value = r.pago.toLocaleString(undefined, options);
+        }
+
+        //Round, ceil, floor
+        (function(){
+
+            /**
+             * Decimal adjustment of a number.
+             *
+             * @param   {String}    type    The type of adjustment.
+             * @param   {Number}    value   The number.
+             * @param   {Integer}   exp     The exponent (the 10 logarithm of the adjustment base).
+             * @returns {Number}            The adjusted value.
+             */
+            function decimalAdjust(type, value, exp) {
+                // If the exp is undefined or zero...
+                if (typeof exp === 'undefined' || +exp === 0) {
+                    return Math[type](value);
+                }
+                value = +value;
+                exp = +exp;
+                // If the value is not a number or the exp is not an integer...
+                if (isNaN(value) || !(typeof exp === 'number' && exp % 1 === 0)) {
+                    return NaN;
+                }
+                // Shift
+                value = value.toString().split('e');
+                value = Math[type](+(value[0] + 'e' + (value[1] ? (+value[1] - exp) : -exp)));
+                // Shift back
+                value = value.toString().split('e');
+                return +(value[0] + 'e' + (value[1] ? (+value[1] + exp) : exp));
+            }
+
+            // Decimal round
+            if (!Math.round10) {
+                Math.round10 = function(value, exp) {
+                    return decimalAdjust('round', value, exp);
+                };
+            }
+            // Decimal floor
+            if (!Math.floor10) {
+                Math.floor10 = function(value, exp) {
+                    return decimalAdjust('floor', value, exp);
+                };
+            }
+            // Decimal ceil
+            if (!Math.ceil10) {
+                Math.ceil10 = function(value, exp) {
+                    return decimalAdjust('ceil', value, exp);
+                };
+            }
+        })();
+
+        //Allow automatic triggering of events
+        function triggerEvent(el, type) {
+            // IE9+ and other modern browsers
+            if ('createEvent' in document) {
+                var e = document.createEvent('HTMLEvents');
+                e.initEvent(type, false, true);
+                el.dispatchEvent(e);
+            } else {
+                // IE8
+                var e = document.createEventObject();
+                e.eventType = type;
+                el.fireEvent('on' + e.eventType, e);
+            }
+        }
+    </script>
+
+    <script>
+        // Download a file form a url.
+        function saveFile(url, saveToDevice = true) {
+            return new Promise(function(resolve, reject) {
+                // Get file name from url.
+                var xhr = new XMLHttpRequest();
+                xhr.responseType = 'blob';
+                xhr.onload = function() {
+                    resolve(xhr);
+                };
+                xhr.onerror = reject;
+                xhr.open('GET', url);
+                xhr.send();
+            }).then(function(xhr) {
+                var filename_pre = url.substring(url.lastIndexOf("/") + 1).split("?")[0];
+                //console.log(filename);
+                var filename = filename_pre.split('%2F')[2];
+                if (saveToDevice) {
+                    var a = document.createElement('a');
+                    a.href = window.URL.createObjectURL(xhr.response); // xhr.response is a blob
+                    a.download = filename.split("%20").join(" "); // Set the file name.
+                    //console.log(a.download);
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                }
+                return xhr;
+            });
+        }
+
+        function download(urls) {
+            return Promise.all(urls.map(saveFile));
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
+</body>
+</html>
