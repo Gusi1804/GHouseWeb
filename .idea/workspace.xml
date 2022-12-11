@@ -4,7 +4,7 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ced7bc21-8bcc-4f54-978a-354c10e4d3d2" name="Default Changelist" comment="Added facturas count to detail page" />
+    <list default="true" id="ced7bc21-8bcc-4f54-978a-354c10e4d3d2" name="Default Changelist" comment="Added tableToExcel() to reembolsos homepage" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -194,7 +194,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670770405658</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="Added tableToExcel() to reembolsos homepage">
+      <created>1670770733429</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1670770733429</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -216,6 +223,7 @@
     <MESSAGE value="Initial commit" />
     <MESSAGE value="Changed entregable checkbox" />
     <MESSAGE value="Added facturas count to detail page" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added facturas count to detail page" />
+    <MESSAGE value="Added tableToExcel() to reembolsos homepage" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added tableToExcel() to reembolsos homepage" />
   </component>
 </project>
