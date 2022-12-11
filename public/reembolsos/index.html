@@ -15,6 +15,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.8.1/firebase-firestore-compat.js"></script>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.18.10/package/dist/xlsx.zahl.js"></script>
+
     <script>
         const firebaseApp = firebase.initializeApp({
             apiKey: "AIzaSyAIrKeHpTwUQLLJipXFnwyI0q7gXYtnZgc",
@@ -106,7 +109,8 @@
                 <!-- Cerrar sesión -->
                 <div class="container">
                     <button type="button" class="btn btn-primary mb-3" onclick="nuevo_r()">Nuevo Reembolso</button>
-                    <button type="button" class="btn btn-secondary mb-3" onclick="logout()">Cerrar Sesión</button>
+                    <button type="button" class="btn btn-outline-secondary" onclick="tableToExcel()">Descargar Excel</button>
+                    <button type="button" class="btn btn-outline-warning mb-3" onclick="logout()">Cerrar Sesión</button>
                 </div>
             </div>
 
@@ -568,6 +572,14 @@
                 .catch((error) => {
                     console.error("Error adding document: ", error);
                 });
+        }
+
+        function tableToExcel() {
+            var wb = XLSX.utils.table_to_book(document.getElementById("reembolsos_table"));
+            /* Export to file (start a download) */
+            XLSX.writeFile(wb, `Reembolsos.xlsx`);
+
+            //XLSX.writeFile(wb, `${document.getElementById("title").innerText} ${document.getElementById("persona").value}.numbers`, {numbers: XLSX_ZAHL_PAYLOAD, compression: true});
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
