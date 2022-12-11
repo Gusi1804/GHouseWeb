@@ -1630,7 +1630,7 @@
             fecha.setHours(0);
             fecha.setDate(date)
             const fecha_timestamp = firebase.firestore.Timestamp.fromDate(fecha);
-            const entregable = document.getElementById("entregable").value;
+            const entregable = document.getElementById("entregable").checked;
             const reembolso = document.getElementById("f_id").innerText;
 
             var db = firebaseApp.firestore();
