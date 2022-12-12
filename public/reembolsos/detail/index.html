@@ -996,6 +996,14 @@
             var estudios_refs_ready = false;
             var archivos_refs_ready = false;
 
+            const counts = [
+                ["PDFs", facturas_pdf.length],
+                ["XMLs", facturas_xml.length],
+                ["Estudios", estudios_pdf.length],
+                ["Archivos", archivos_pdf.length],
+            ];
+            console.table(counts);
+
             let pdfs = new Promise(function(myResolve, myReject) {
                 var storageRef = firebase.storage().ref();
 
@@ -1027,6 +1035,8 @@
                         myResolve();
                     }
                 }
+
+                myReject();
             });
 
             let ids = new Promise(function (resolve, reject) {
@@ -1070,6 +1080,8 @@
                         myResolve();
                     }
                 }
+
+                myReject();
             });
 
             let archivos = new Promise(function(myResolve, myReject) {
@@ -1086,30 +1098,57 @@
                         myResolve();
                     }
                 }
+
+                myReject();
             });
 
             pdfs.then(() => {
+                console.log("PDFs ready");
+                pdf_refs_ready = true;
+            }).catch(() => {
+                if (facturas_pdf.length != 0) {
+                    console.error("Couldn't download PDFs.");
+                }
                 pdf_refs_ready = true;
             });
 
             xmls.then(() => {
+                console.log("XMLs ready");
                 xml_refs_ready = true;
-            })
+            }).catch(() => {
+                if (facturas_xml.length != 0) {
+                    console.error("Couldn't download all XMLs.");
+                }
+                xml_refs_ready = true;
+            });
 
             ids.then(() => {
+                console.log("IDs ready");
                 ids_refs_ready = true;
             }).catch(() => {
-                console.error("Couldn't download all IDs.")
+                console.error("Couldn't download all IDs.");
                 ids_refs_ready = true;
-            })
+            });
 
             estudios.then(() => {
+                console.log("Estudios ready");
                 estudios_refs_ready = true;
-            })
+            }).catch(() => {
+                if (estudios_pdf.length != 0) {
+                    console.error("Couldn't download all Estudios.");
+                }
+                estudios_refs_ready = true;
+            });
 
             archivos.then(() => {
+                console.log("Archivos ready");
                 archivos_refs_ready = true;
-            })
+            }).catch(() => {
+                if (archivos_pdf.length != 0) {
+                    console.error("Couldn't download all Archivos.");
+                }
+                archivos_refs_ready = true;
+            });
 
             await until(_ => (pdf_refs_ready == true && xml_refs_ready == true && ids_refs_ready == true && estudios_refs_ready == true && archivos_refs_ready == true));
 
