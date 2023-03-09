@@ -11,6 +11,13 @@
         "source": "medicamentos.garfias.tech/**",
         "destination": "/medicamentos/index.html"
       }
+    ],
+    "appAssociation": "AUTO",
+    "rewrites": [
+      {
+        "source": "/ghouseapp/**",
+        "dynamicLinks": true
+      }
     ]
   },
   "emulators": {
