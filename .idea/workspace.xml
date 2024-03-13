@@ -7,7 +7,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ced7bc21-8bcc-4f54-978a-354c10e4d3d2" name="Default Changelist" comment="Added support for international locales + added xml parse for new facturas" />
+    <list default="true" id="ced7bc21-8bcc-4f54-978a-354c10e4d3d2" name="Default Changelist" comment="Fixed support for international dates" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -155,7 +155,7 @@
       <workItem from="1683423571411" duration="598000" />
       <workItem from="1684196788000" duration="598000" />
       <workItem from="1684388582612" duration="55000" />
-      <workItem from="1710289884702" duration="9132000" />
+      <workItem from="1710289884702" duration="9848000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <created>1670713016837</created>
@@ -255,7 +255,21 @@
       <option name="project" value="LOCAL" />
       <updated>1710298448440</updated>
     </task>
-    <option name="localTasksCounter" value="15" />
+    <task id="LOCAL-00015" summary="Updated support for international dates">
+      <created>1710300365069</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1710300365069</updated>
+    </task>
+    <task id="LOCAL-00016" summary="Fixed support for international dates">
+      <created>1710301260837</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1710301260837</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -283,6 +297,8 @@
     <MESSAGE value="Solved a problem when trying to download all files in a Reembolso when there were no files of a category." />
     <MESSAGE value="Added dynamic link for G House iOS App" />
     <MESSAGE value="Added support for international locales + added xml parse for new facturas" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added support for international locales + added xml parse for new facturas" />
+    <MESSAGE value="Updated support for international dates" />
+    <MESSAGE value="Fixed support for international dates" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed support for international dates" />
   </component>
 </project>
