@@ -7,9 +7,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ced7bc21-8bcc-4f54-978a-354c10e4d3d2" name="Default Changelist" comment="Solved a problem when trying to download all files in a Reembolso when there were no files of a category.">
+    <list default="true" id="ced7bc21-8bcc-4f54-978a-354c10e4d3d2" name="Default Changelist" comment="Added dynamic link for G House iOS App">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/firebase.json" beforeDir="false" afterPath="$PROJECT_DIR$/firebase.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/reembolsos/detail/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/reembolsos/detail/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -153,7 +153,12 @@
       <workItem from="1674954295139" duration="3255000" />
       <workItem from="1675993729285" duration="598000" />
       <workItem from="1676441073993" duration="1307000" />
-      <workItem from="1678370769949" duration="144000" />
+      <workItem from="1678370769949" duration="769000" />
+      <workItem from="1678903407479" duration="598000" />
+      <workItem from="1683423571411" duration="598000" />
+      <workItem from="1684196788000" duration="598000" />
+      <workItem from="1684388582612" duration="55000" />
+      <workItem from="1710289884702" duration="8444000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit">
       <created>1670713016837</created>
@@ -239,7 +244,14 @@
       <option name="project" value="LOCAL" />
       <updated>1670864804423</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Added dynamic link for G House iOS App">
+      <created>1678370935465</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1678370935465</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -265,6 +277,7 @@
     <MESSAGE value="Fixed tableToExcel() button in reembolsos homepage" />
     <MESSAGE value="Fixed saving entregable property in reembolsos detail" />
     <MESSAGE value="Solved a problem when trying to download all files in a Reembolso when there were no files of a category." />
-    <option name="LAST_COMMIT_MESSAGE" value="Solved a problem when trying to download all files in a Reembolso when there were no files of a category." />
+    <MESSAGE value="Added dynamic link for G House iOS App" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added dynamic link for G House iOS App" />
   </component>
 </project>

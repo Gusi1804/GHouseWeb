@@ -218,6 +218,10 @@
                             <div class="modal-body">
                                 <form>
                                     <div class="mb-3 input-group">
+                                        <span class="input-group-text">XML</span>
+                                        <input type="file" class="form-control" id="nueva_factura_xml" name="nueva_factura_xml" accept=".xml" onchange="parseXMLFactura(this)">
+                                    </div>
+                                    <div class="mb-3 input-group">
                                         <span class="input-group-text">Folio</span>
                                         <input type="text" class="form-control" id="folio">
                                     </div>
@@ -244,6 +248,7 @@
                                     <div class="mb-3 input-group">
                                         <span class="input-group-text">Concepto</span>
                                         <select class="form-select" aria-label="Default select example" id="concepto">
+                                            <option value="">Seleccione una opción</option>
                                             <option value="Medicamentos">Medicamentos</option>
                                             <option value="Gastos Diversos">Gastos Diversos</option>
                                             <option value="Honorarios Médicos">Honorarios Médicos</option>
@@ -708,14 +713,14 @@
                             currency: currency,
                             style: "currency",
                         }
-                        document.getElementById("reclamado_real").value = r.reclamado_real.toLocaleString(undefined, options);
-                        document.getElementById("reclamado_met").value = r.reclamado_met.toLocaleString(undefined, options);
-                        document.getElementById("unpaid_real").value = r.no_pagado_real.toLocaleString(undefined, options);
-                        document.getElementById("unpaid_met").value = r.no_pagado_met.toLocaleString(undefined, options);
-                        document.getElementById("subtotal").value = r.subtotal.toLocaleString(undefined, options);
-                        document.getElementById("deducible").value = r.deducible.toLocaleString(undefined, options);
-                        document.getElementById("coaseguro").value = r.coaseguro.toLocaleString(undefined, options);
-                        document.getElementById("pago").value = r.pago.toLocaleString(undefined, options);
+                        document.getElementById("reclamado_real").value = strToCurrStr(r.reclamado_real);
+                        document.getElementById("reclamado_met").value = strToCurrStr(r.reclamado_met);
+                        document.getElementById("unpaid_real").value = strToCurrStr(r.no_pagado_real);
+                        document.getElementById("unpaid_met").value = strToCurrStr(r.no_pagado_met);
+                        document.getElementById("subtotal").value = strToCurrStr(r.subtotal);
+                        document.getElementById("deducible").value = strToCurrStr(r.deducible);
+                        document.getElementById("coaseguro").value = strToCurrStr(r.coaseguro);
+                        document.getElementById("pago").value = strToCurrStr(r.pago);
 
                         document.getElementById("pagado").checked = r.pagado;
                         document.getElementById("conceptos_unpaid_met").value = r.unpaid_items_met;
@@ -1310,6 +1315,10 @@
 
             const files = document.getElementById(`${id}`).files;
 
+            uploadFactura(folio, file_type, files)
+        }
+
+        function uploadFactura(folio, file_type, files) {
             if (files.length > 0) {
                 const file = files[0];
 
@@ -1608,6 +1617,10 @@
                     document.getElementById("reembolsable").value = "";
                     //document.getElementById("fecha").value = "";
                     document.getElementById("notas").value = "";
+                    if (document.getElementById("nueva_factura_xml").files.length > 0) {
+                        uploadFactura(folio, "xml", document.getElementById("nueva_factura_xml").files);
+                        document.getElementById("nueva_factura_xml").files = [];
+                    }
                 })
                 .catch((error) => {
                     console.error("Error writing document: ", error);
@@ -1950,9 +1963,151 @@
                 // Uh-oh, an error occurred!
             });
         }
+
+        function parseXMLFactura(el) {
+            const [file] = document.getElementById("nueva_factura_xml").files;
+            const parser = new DOMParser();
+            const reader = new FileReader();
+
+            reader.addEventListener(
+                "load",
+                () => {
+                    // file loaded as text :)
+                    const doc = parser.parseFromString(reader.result, "text/xml");
+
+                    const errorNode = doc.querySelector("parsererror");
+                    if (errorNode) {
+                        console.log("error while parsing");
+                    } else {
+                        console.log(doc.documentElement);
+                        let attributes = doc.documentElement.attributes;
+                        console.log(attributes);
+
+                        let total = attributes.getNamedItem("Total").nodeValue;
+                        let fecha = attributes.getNamedItem("Fecha").nodeValue;
+                        var emisor_nombre = "";
+                        var emisor_rfc = "";
+                        var folio = "";
+                        var conceptos = [];
+                        var descuentos = 0;
+
+                        let children = doc.documentElement.childNodes;
+                        for (let i = 0; i < children.length; i++) {
+                            let node = children[i];
+                            if (node.tagName == "cfdi:Emisor") {
+                                let data = node.attributes;
+                                emisor_rfc = data.getNamedItem("Rfc").nodeValue;
+                                emisor_nombre = data.getNamedItem("Nombre").nodeValue;
+                            }
+                            if (node.tagName == "cfdi:Complemento") {
+                                let complement_children = node.childNodes;
+                                for (let j = 0; j < complement_children.length; j++) {
+                                    if (node.childNodes[j].tagName == "tfd:TimbreFiscalDigital") {
+                                        let data = node.childNodes[j].attributes;
+                                        folio = data.getNamedItem("UUID").nodeValue;
+                                    }
+                                }
+                            }
+                            if (node.tagName == "cfdi:Conceptos") {
+                                let concept_children = node.childNodes;
+                                for (let j = 0; j < concept_children.length; j++) {
+                                    let data = node.childNodes[j].attributes;
+                                    if (data != undefined) {
+                                        var concepto = {};
+
+                                        concepto.cantidad = data.getNamedItem("Cantidad").nodeValue;
+                                        concepto.descripcion = data.getNamedItem("Descripcion").nodeValue;
+                                        concepto.valorUnitario = data.getNamedItem("ValorUnitario").nodeValue;
+                                        concepto.importe = data.getNamedItem("Importe").nodeValue;
+
+                                        conceptos.push(concepto);
+                                        console.log(concepto)
+                                    }
+                                }
+                            }
+                        }
+
+                        console.log(total, fecha, emisor_nombre, emisor_rfc, folio, conceptos);
+                        var date = new Date(fecha);
+
+                        var options = {
+                            maximumFractionDigits: 2,
+                            style: "currency",
+                            currency: "MXN"
+                        }
+
+                        document.getElementById("monto").value = strToCurrStr(total);
+                        document.getElementById("reembolsable").value = strToCurrStr(total);
+                        document.getElementById("fecha").valueAsDate = date;
+                        document.getElementById("folio").value = folio;
+
+                        let emisor_obj = document.getElementById("emisor");
+
+                        switch (emisor_rfc) {
+                            case "MLG100224TC1":
+                                emisor_obj.value = "Freestyle";
+                                break;
+                            case "PPL961114GZ1":
+                                emisor_obj.value = "San Pablo";
+                                break;
+                            case "CFC110121742":
+                                emisor_obj.value = "Farmacia del Ahorro";
+                                break;
+                            case "URA930831KB3":
+                                emisor_obj.value = "Imagenus";
+                                break;
+                            case "CME910715UB9":
+                                emisor_obj.value = "Costco";
+                                break;
+                            case "OAB7111134J3":
+                                emisor_obj.value = "Olarte y Akle";
+                                break;
+                            case "CABE810829KY6":
+                                emisor_obj.value = "Dra. Eugenia";
+                                break;
+                            case "SHE190630V37":
+                                emisor_obj.value = "Sanborn's";
+                                break;
+                            default:
+                                emisor_obj.value = "otro";
+                                checkEmisor();
+                                document.getElementById("emisor_other").value = emisor_nombre;
+                                break;
+                        }
+
+                        for (let i = 0; i < conceptos.length; i++) {
+                            let notas = document.getElementById("notas");
+                            let concepto = conceptos[i];
+
+                            if (notas.value == "") {
+                                notas.value = `${concepto.cantidad} ${concepto.descripcion} @ ${strToCurrStr(concepto.valorUnitario)} = ${strToCurrStr(concepto.importe)}`;
+                            } else {
+                                notas.value = notas.value + `\n${concepto.cantidad} ${concepto.descripcion} @ ${strToCurrStr(concepto.valorUnitario)} = ${strToCurrStr(concepto.importe)}`;
+                            }
+
+                        }
+                    }
+                },
+                false,
+            );
+
+            if (file) {
+                reader.readAsText(file);
+            }
+        }
     </script>
 
     <script>
+        function strToCurrStr(string) {
+            let num = Number(string);
+            var options = {
+                maximumFractionDigits: 2,
+                currency: 'MXN',
+                style: "currency",
+            }
+
+            return num.toLocaleString(undefined, options).replace('MX', '');
+        }
         function updateReembolsable(el) {
             var options = {
                 maximumFractionDigits: 2,
@@ -1960,7 +2115,7 @@
                 style: "currency",
             }
 
-            document.getElementById("reembolsable").value = localStringToNumber( document.getElementById("monto").value ).toLocaleString( undefined, options )
+            document.getElementById("reembolsable").value = strToCurrStr(localStringToNumber( document.getElementById("monto").value ));
         }
 
         //Currency Input Support
@@ -1995,7 +2150,7 @@
                 }
 
                 e.target.value = ( value || value === 0 ) ?
-                    localStringToNumber( value ).toLocaleString( undefined, options ) :
+                    strToCurrStr(localStringToNumber( value )) :
                     ''
             }
         }
@@ -2049,16 +2204,16 @@
             if (id != "coaseguro") {
                 //Coaseguro is not being edited
                 r.coaseguro = Math.round10((r.subtotal - r.deducible) * 0.1, -2);
-                document.getElementById("coaseguro").value = r.coaseguro.toLocaleString(undefined, options);
+                document.getElementById("coaseguro").value = strToCurrStr(r.coaseguro);
             } else {
                 r.coaseguro = Number(document.getElementById("coaseguro").value.replace('$', '').replace(',',''));
             }
 
             r.pago = r.reclamado_met - r.no_pagado_met - r.deducible - r.coaseguro;
 
-            document.getElementById("unpaid_real").value = r.no_pagado_real.toLocaleString(undefined, options);
-            document.getElementById("subtotal").value = r.subtotal.toLocaleString(undefined, options);
-            document.getElementById("pago").value = r.pago.toLocaleString(undefined, options);
+            document.getElementById("unpaid_real").value = strToCurrStr(r.no_pagado_real);
+            document.getElementById("subtotal").value = strToCurrStr(r.subtotal);
+            document.getElementById("pago").value = strToCurrStr(r.pago);
         }
 
         //Round, ceil, floor
