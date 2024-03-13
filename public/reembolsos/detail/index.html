@@ -704,7 +704,7 @@
                         document.getElementById("asunto").value = r.asunto;
                         document.getElementById("persona").value = r.persona;
 
-                        document.getElementById("fecha_main").value = r.fecha.toDate().toLocaleDateString('en-CA');
+                        document.getElementById("fecha_main").valueAsDate = r.fecha.toDate();
 
                         document.getElementById("siniestro").value = r.siniestro;
 
