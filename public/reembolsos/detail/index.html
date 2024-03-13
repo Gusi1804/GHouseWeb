@@ -1720,8 +1720,8 @@
                     style: "currency",
                 }
 
-                document.getElementById("reclamado_real").value = (reclamado_real + reembolsable).toLocaleString(undefined, options);
-                document.getElementById("reclamado_met").value = (reclamado_met + monto).toLocaleString(undefined, options);
+                document.getElementById("reclamado_real").value = strToCurrStr(reclamado_real + reembolsable);
+                document.getElementById("reclamado_met").value = strToCurrStr(reclamado_met + monto);
 
                 triggerEvent(document.getElementById("reclamado_met"), 'input');
 
