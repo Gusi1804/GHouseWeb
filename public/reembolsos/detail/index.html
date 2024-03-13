@@ -2029,6 +2029,8 @@
 
                         console.log(total, fecha, emisor_nombre, emisor_rfc, folio, conceptos);
                         var date = new Date(fecha + "-06:00");
+                        date.setHours(0);
+                        console.log(date, date.toLocaleString())
 
                         var options = {
                             maximumFractionDigits: 2,
